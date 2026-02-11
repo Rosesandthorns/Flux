@@ -8,9 +8,10 @@ export interface Server {
     iconURL: string;
     inviteCode: string;
     createdAt: Timestamp;
+    trialModeEnabled?: boolean;
 }
 
-export type ServerRole = 'owner' | 'admin' | 'user';
+export type ServerRole = 'owner' | 'admin' | 'user' | 'trial';
 
 export interface ServerMember {
     id?: string; // userId
@@ -37,4 +38,3 @@ export interface ServerMessage {
 }
 
 export type ServerMessagePayload = Omit<ServerMessage, 'id' | 'createdAt' | 'channelId'>;
-

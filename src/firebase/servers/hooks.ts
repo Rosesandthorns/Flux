@@ -1,10 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useUser } from '../auth/use-user';
-import { useFirestore } from '../provider';
-import { collection, query, where, orderBy, type Query, doc } from 'firebase/firestore';
-import { useCollection, useDoc } from '../firestore';
+import { useMemo, useState, useEffect } from 'react';
+import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
+import { collection, query, where, orderBy, type Query, doc, onSnapshot, getDoc, type DocumentReference, limit } from 'firebase/firestore';
 import type { Server, Channel, ServerMember, ServerMessage } from './types';
 
 
@@ -43,10 +41,6 @@ export function useUserServers() {
         return () => unsubscribe();
 
     }, [user, firestore]);
-    
-    // A quick hack to import useState and useEffect without rewriting the whole hook
-    const [_,__] = useState();
-    useEffect(() => {}, [])
 
     return { servers, loading };
 }
@@ -100,8 +94,3 @@ export function useServerMessages(serverId: string, channelId: string) {
 
   return { messages, loading, error };
 }
-
-// Dummy imports to satisfy the type checker in the generated code
-import { useState, useEffect } from 'react';
-import { onSnapshot, getDoc, limit, DocumentReference } from 'firebase/firestore';
-

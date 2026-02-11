@@ -11,11 +11,12 @@ import {
   writeBatch,
   doc,
   getDoc,
+  setDoc,
 } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import type { ServerMessagePayload } from './types';
+import type { ServerMessagePayload, Server } from './types';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 
@@ -34,6 +35,7 @@ export async function createServer(firestore: Firestore, user: User, serverName:
         iconURL: defaultIcon?.imageUrl || '',
         createdAt: serverTimestamp(),
         inviteCode: inviteCode,
+        trialModeEnabled: false,
     });
     
     // 2. Create the owner's member document
@@ -78,6 +80,7 @@ export async function joinServer(firestore: Firestore, user: User, inviteCode: s
     }
     const serverDoc = querySnapshot.docs[0];
     const serverId = serverDoc.id;
+    const serverData = serverDoc.data() as Server;
 
     // 2. Check if user is already a member
     const memberRef = doc(firestore, `servers/${serverId}/members/${user.uid}`);
@@ -87,8 +90,9 @@ export async function joinServer(firestore: Firestore, user: User, inviteCode: s
     }
     
     // 3. Add user as a member
+    const newMemberRole = serverData.trialModeEnabled ? 'trial' : 'user';
     await setDoc(memberRef, {
-        role: 'user',
+        role: newMemberRole,
         joinedAt: serverTimestamp(),
     });
 

@@ -10,6 +10,11 @@ service cloud.firestore {
     function isServerRole(serverId, roles) {
       return get(/databases/$(database)/documents/servers/$(serverId)/members/$(request.auth.uid)).data.role in roles;
     }
+
+    function isAllowedToRead(serverId) {
+      let member = get(/databases/$(database)/documents/servers/$(serverId)/members/$(request.auth.uid));
+      return member != null && member.data.role != 'trial';
+    }
     
     match /users/{userId} {
       allow read: if request.auth != null;
@@ -56,18 +61,13 @@ service cloud.firestore {
       }
 
       match /channels/{channelId} {
-        // For now, any server member can read. Only owner/admin can manage.
-        allow read: if isServerMember(serverId);
+        allow read: if isAllowedToRead(serverId);
         allow create, update, delete: if isServerRole(serverId, ['owner', 'admin']);
 
         match /messages/{messageId} {
-            // Any member can read messages.
-            allow read: if isServerMember(serverId);
-            // Author must be themselves and a member of the server.
+            allow read: if isAllowedToRead(serverId);
             allow create: if request.auth.uid == request.resource.data.authorId && isServerMember(serverId);
-            // Owner/admin can delete any message, users can delete their own.
             allow delete: if isServerRole(serverId, ['owner', 'admin']) || request.auth.uid == resource.data.authorId;
-            // Updating messages is disabled.
             allow update: if false;
         }
       }

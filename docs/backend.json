@@ -186,6 +186,11 @@
         "createdAt": {
           "type": "string",
           "description": "The timestamp when the server was created."
+        },
+        "trialModeEnabled": {
+          "type": "boolean",
+          "description": "If true, new members will join with the 'trial' role.",
+          "default": false
         }
       },
       "required": ["name", "ownerId", "inviteCode", "createdAt"]
@@ -197,7 +202,7 @@
       "properties": {
         "role": {
           "type": "string",
-          "enum": ["owner", "admin", "user"],
+          "enum": ["owner", "admin", "user", "trial"],
           "description": "The role of the user in the server."
         },
         "joinedAt": {
