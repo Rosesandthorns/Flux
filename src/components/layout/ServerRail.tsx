@@ -17,10 +17,6 @@ import DirectMessages from './DirectMessages';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const servers = PlaceHolderImages.filter(img => img.id.startsWith('server-'));
-servers[0].description = "Server 1";
-servers[1].description = "Server 2";
-servers[2].description = "Server 3";
-
 
 const ServerButton = ({ children, tooltip }: { children: React.ReactNode; tooltip: string; }) => (
   <Tooltip>
@@ -42,7 +38,7 @@ export default function ServerRail() {
     <TooltipProvider delayDuration={0}>
         <div className="group fixed inset-x-0 bottom-0 z-[60] flex h-24 items-end justify-center pointer-events-none">
             <nav className="mb-4 transform-gpu transition-all duration-300 ease-in-out opacity-0 translate-y-8 group-hover:opacity-100 group-hover:translate-y-0 pointer-events-auto">
-                <div className="flex items-center space-x-3 bg-background/50 p-3 backdrop-blur-md rounded-full border border-border/50 shadow-lg">
+                <div className="flex items-center gap-3 bg-background/50 p-3 backdrop-blur-md rounded-full border border-border/50 shadow-lg">
                     <Sheet>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -69,25 +65,27 @@ export default function ServerRail() {
                         </SheetContent>
                     </Sheet>
                     <div className="h-8 w-[2px] bg-border" />
-                    {servers.map((server) => (
-                    <Tooltip key={server.id}>
-                        <TooltipTrigger asChild>
-                        <button className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full">
-                            <Image
-                            src={server.imageUrl}
-                            alt={server.description}
-                            fill
-                            sizes="48px"
-                            data-ai-hint={server.imageHint}
-                            className="object-cover transition-all duration-300 ease-in-out group-hover:scale-110"
-                            />
-                        </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                        <p>{server.description}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                    ))}
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar max-w-[10.5rem]">
+                        {servers.map((server) => (
+                        <Tooltip key={server.id}>
+                            <TooltipTrigger asChild>
+                            <button className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full">
+                                <Image
+                                src={server.imageUrl}
+                                alt={server.description}
+                                fill
+                                sizes="48px"
+                                data-ai-hint={server.imageHint}
+                                className="object-cover transition-all duration-300 ease-in-out group-hover:scale-110"
+                                />
+                            </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                            <p>{server.description}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                        ))}
+                    </div>
                     <ServerButton tooltip="Add a Server">
                         <Plus className="h-6 w-6" />
                     </ServerButton>
