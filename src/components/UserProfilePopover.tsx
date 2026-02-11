@@ -39,6 +39,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+    const [isUpdatingGlobalStatus, setIsUpdatingGlobalStatus] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -85,6 +86,11 @@ export default function UserProfilePopover({ children, userId, serverId, current
         return false;
     }, [currentUserMember, member, isSelf]);
 
+    const canChangeGlobalStatus = useMemo(() => {
+        if (!isGlobalOwner || !userProfile || isSelf) return false;
+        return userProfile.status !== 'owner';
+    }, [isGlobalOwner, userProfile, isSelf]);
+
     const canModerateProfile = useMemo(() => {
         if (!isGlobalAdmin || !userProfile || isSelf) return false;
         if (isGlobalOwner) return userProfile.status !== 'owner';
@@ -113,6 +119,26 @@ export default function UserProfilePopover({ children, userId, serverId, current
             });
         } finally {
             setIsUpdatingRole(false);
+        }
+    }
+
+    const handleGlobalStatusChange = async (newStatus: 'admin' | 'user') => {
+        if (!firestore || !canChangeGlobalStatus) return;
+        setIsUpdatingGlobalStatus(true);
+        try {
+            await updateUserSettings(firestore, userId, { status: newStatus });
+            toast({
+                title: 'Global Status Updated',
+                description: `${userProfile?.displayName}'s global status has been changed to ${newStatus}.`,
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to update global status.',
+            });
+        } finally {
+            setIsUpdatingGlobalStatus(false);
         }
     }
 
@@ -232,6 +258,26 @@ export default function UserProfilePopover({ children, userId, serverId, current
                                     )}
                                 </>
                             )}
+
+                            {canChangeGlobalStatus && (
+                                <>
+                                    <hr className="my-4"/>
+                                    <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Global Status</h4>
+                                    <div className="flex items-center gap-2">
+                                        <Select defaultValue={userProfile.status} onValueChange={(value) => handleGlobalStatusChange(value as 'admin' | 'user')} disabled={isUpdatingGlobalStatus}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="admin">Admin</SelectItem>
+                                                <SelectItem value="user">User</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {isUpdatingGlobalStatus && <Loader2 className="h-4 w-4 animate-spin"/>}
+                                    </div>
+                                </>
+                            )}
+                            
                             {canModerateProfile && (
                                 <>
                                     <hr className="my-4"/>

@@ -2,6 +2,18 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isGlobalOwner() {
+      // Check if the requesting user has the 'owner' global status.
+      let user = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return user.data.status == 'owner';
+    }
+
+    function isGlobalAdmin() {
+      // Check if the requesting user has 'owner' or 'admin' global status.
+      let user = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return user.data.status in ['owner', 'admin'];
+    }
     
     function isServerMember(serverId) {
       return get(/databases/$(database)/documents/servers/$(serverId)/members/$(request.auth.uid)).data != null;
@@ -47,7 +59,9 @@ service cloud.firestore {
     
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId;
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId || (isGlobalOwner() && get(/databases/$(database)/documents/users/$(userId)).data.status != 'owner');
+      allow delete: if request.auth.uid != userId && ((isGlobalAdmin() && get(/databases/$(database)/documents/users/$(userId)).data.status == 'user') || (isGlobalOwner() && get(/databases/$(database)/documents/users/$(userId)).data.status != 'owner'));
     }
 
     match /users/{userId}/friends/{friendId} {
@@ -70,7 +84,7 @@ service cloud.firestore {
         allow read: if request.auth.uid in conversationId.split('_');
         allow create: if request.auth.uid in conversationId.split('_') && request.auth.uid == request.resource.data.authorId;
         allow update: if request.auth.uid == resource.data.authorId;
-        allow delete: if request.auth.uid == resource.data.authorId;
+        allow delete: if request.auth.uid == resource.data.authorId || isGlobalAdmin();
       }
     }
 
