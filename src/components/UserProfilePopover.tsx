@@ -5,7 +5,7 @@ import { useDoc, useFirestore, useServerMember, updateUserRole, useUserProfile, 
 import type { UserProfile } from '@/firebase/auth/users';
 import type { ServerMember, ServerRole } from '@/firebase/servers/types';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -32,6 +32,7 @@ interface UserProfilePopoverProps {
 const profileFormSchema = z.object({
   displayName: z.string().min(2, "Must be at least 2 characters.").max(50, "Must be 50 characters or less."),
   handle: z.string().min(2, "Must be at least 2 characters.").max(30, "Must be 30 characters or less.").regex(/^[a-zA-Z0-9_.]+$/, "Can only contain letters, numbers, underscores, and periods."),
+  photoURL: z.string().url({ message: "Please enter a valid URL." }).or(z.literal("")),
 });
 
 
@@ -62,6 +63,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
       defaultValues: {
         displayName: "",
         handle: "",
+        photoURL: ""
       },
     });
     
@@ -70,6 +72,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
             form.reset({
                 displayName: userProfile.displayName || "",
                 handle: userProfile.handle ? userProfile.handle.split('@')[0] : "",
+                photoURL: userProfile.photoURL || "",
             });
         }
     }, [userProfile, isAdminEditDialogOpen, form]);
@@ -157,6 +160,9 @@ export default function UserProfilePopover({ children, userId, serverId, current
       if (newHandle !== userProfile.handle) {
           updates.handle = newHandle;
           hasIdentityChanged = true;
+      }
+       if (values.photoURL !== userProfile.photoURL) {
+          updates.photoURL = values.photoURL;
       }
       
       if (Object.keys(updates).length === 0) {
@@ -332,6 +338,19 @@ export default function UserProfilePopover({ children, userId, serverId, current
                                                                     You can change this user's display name and handle again {formatDistanceToNow(nextUpdateDate, { addSuffix: true })}.
                                                                 </p>
                                                             )}
+                                                             <FormField
+                                                                control={form.control}
+                                                                name="photoURL"
+                                                                render={({ field }) => (
+                                                                    <FormItem>
+                                                                        <FormLabel>Profile Picture URL</FormLabel>
+                                                                        <FormControl>
+                                                                            <Input placeholder="https://example.com/image.png" {...field} disabled={isSaving} />
+                                                                        </FormControl>
+                                                                        <FormMessage />
+                                                                    </FormItem>
+                                                                )}
+                                                            />
                                                             <DialogFooter>
                                                                 <DialogClose asChild>
                                                                     <Button type="button" variant="secondary" disabled={isSaving}>Cancel</Button>
