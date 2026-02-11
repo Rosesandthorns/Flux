@@ -12,6 +12,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -146,3 +147,17 @@ export const createChannel = (
         throw serverError;
     });
 };
+
+export async function leaveServer(firestore: Firestore, serverId: string, userId: string) {
+    const memberRef = doc(firestore, `servers/${serverId}/members/${userId}`);
+    // You might want to add checks here, e.g., an owner can't leave unless they transfer ownership.
+    // For now, we'll allow any member to leave.
+    return deleteDoc(memberRef).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: memberRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+}

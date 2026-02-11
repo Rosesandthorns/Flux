@@ -15,7 +15,7 @@ import { useFriends, useFriendRequests } from './friends/hooks';
 import { useMessages } from './messages/hooks';
 import { sendMessage } from './messages/actions';
 import type { Message } from './messages/types';
-import { createServer, joinServer, sendServerMessage, createChannel } from './servers/actions';
+import { createServer, joinServer, sendServerMessage, createChannel, leaveServer } from './servers/actions';
 import { useUserServers, useServer, useServerChannels, useServerMessages, useServerMember } from './servers/hooks';
 
 function initializeFirebase(): { app: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null; } {
@@ -64,5 +64,6 @@ export {
   sendServerMessage,
   useServerMember,
   createChannel,
+  leaveServer,
 };
 export type { Message };
