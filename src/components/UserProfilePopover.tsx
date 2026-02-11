@@ -56,6 +56,7 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription as DialogDesc,
+  DialogFooter,
   DialogHeader as DialogHeaderComponent,
   DialogTitle as DialogTitleComponent,
   DialogTrigger,
