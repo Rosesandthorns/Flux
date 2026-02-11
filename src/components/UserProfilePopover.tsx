@@ -43,6 +43,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
     const [isUpdatingGlobalStatus, setIsUpdatingGlobalStatus] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     const [isAdminEditDialogOpen, setIsAdminEditDialogOpen] = useState(false);
     const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
@@ -208,10 +209,10 @@ export default function UserProfilePopover({ children, userId, serverId, current
     }
 
     return (
-        <Popover modal={true}>
+        <Popover open={isOpen} onOpenChange={setIsOpen} modal={true}>
             <PopoverTrigger asChild>{children}</PopoverTrigger>
-            <PopoverContent 
-                className="w-80 p-0"
+            <PopoverContent
+                className="w-80 p-0 max-h-[85vh] flex flex-col"
                 onPointerDownOutside={(e) => {
                   const target = e.target as HTMLElement;
                   if (target.closest('[data-radix-dialog-content]') || target.closest('[data-radix-select-content]')) {
@@ -219,7 +220,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
                   }
                 }}
             >
-                <ScrollArea className="max-h-[80vh]">
+                <ScrollArea className="flex-1">
                     {profileLoading || (serverId && memberLoading) ? (
                         <div className="p-4 space-y-2">
                             <Skeleton className="h-20 w-20 rounded-full" />
