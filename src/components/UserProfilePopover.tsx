@@ -21,7 +21,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { add, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import Draggable from 'react-draggable';
 
 interface UserProfilePopoverProps {
     children: React.ReactNode;
@@ -49,7 +48,6 @@ export default function UserProfilePopover({ children, userId, serverId, current
     const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
     
     const { data: currentUserProfile } = useUserProfile();
-    const nodeRef = useRef(null);
 
     const userProfileRef = useMemo(() => {
         if (!firestore || !userId) return null;
@@ -212,9 +210,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen} modal={true}>
             <PopoverTrigger asChild>{children}</PopoverTrigger>
-            <Draggable nodeRef={nodeRef} handle=".drag-handle">
                 <PopoverContent
-                    ref={nodeRef}
                     className="w-80 overflow-y-auto max-h-[85vh]"
                     onPointerDownOutside={(e) => {
                       const target = e.target as HTMLElement;
@@ -231,7 +227,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
                         </div>
                     ) : userProfile ? (
                         <div className="flex flex-col -m-4">
-                             <div className="relative h-16 w-full bg-primary/20 drag-handle cursor-move">
+                             <div className="relative h-16 w-full bg-primary/20">
                                 <Avatar className="absolute bottom-0 left-4 h-20 w-20 translate-y-1/2 border-4 border-background rounded-full">
                                     {userProfile.photoURL && <AvatarImage src={userProfile.photoURL} alt={userProfile.displayName} />}
                                     <AvatarFallback>{userProfile.displayName.charAt(0)}</AvatarFallback>
@@ -380,7 +376,6 @@ export default function UserProfilePopover({ children, userId, serverId, current
                         <p>User not found.</p>
                     )}
                 </PopoverContent>
-            </Draggable>
         </Popover>
     );
 }
