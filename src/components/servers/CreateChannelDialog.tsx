@@ -76,7 +76,7 @@ export default function CreateChannelDialog({ serverId, channelType: initialType
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="z-[103]">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Create Channel</DialogTitle>
                     <DialogDescription>

@@ -87,7 +87,7 @@ export default function EditChannelDialog({ serverId, channel, children }: EditC
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="z-[103]">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Edit #{channel.name}</DialogTitle>
                     <DialogDescription>

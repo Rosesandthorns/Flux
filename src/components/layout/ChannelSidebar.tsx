@@ -378,7 +378,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             <SheetContent
               showCloseButton={false}
               side="top"
-              className="h-screen w-screen p-0 border-none z-[103]"
+              className="h-screen w-screen p-0 border-none z-[111]"
             >
               <SheetHeader className="sr-only">
                 <SheetTitle>Settings</SheetTitle>
@@ -394,7 +394,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
 
       {/* Invite Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent className="z-[104]">
+        <DialogContent>
             <DialogHeader>
                 <DialogTitle>Invite friends to {server?.name}</DialogTitle>
                 <DialogDescription>
@@ -412,7 +412,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
       
       {/* Leave Server Alert */}
       <AlertDialog open={showLeaveAlert} onOpenChange={setShowLeaveAlert}>
-          <AlertDialogContent className="z-[104]">
+          <AlertDialogContent>
               <AlertDialogHeader>
                   <AlertDialogTitle>Leave '{server?.name}'?</AlertDialogTitle>
                   <AlertDialogDescription>
