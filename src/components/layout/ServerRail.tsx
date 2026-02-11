@@ -1,12 +1,21 @@
 "use client";
 
-import { Home, Plus, Compass } from 'lucide-react';
+import { Home, Plus, Compass, X } from 'lucide-react';
 import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerTrigger,
+  DrawerClose,
+} from '@/components/ui/drawer';
 import ExploreServers from './ExploreServers';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 
 const servers = PlaceHolderImages.filter(img => img.id.startsWith('server-'));
 
@@ -57,33 +66,39 @@ export default function ServerRail() {
                     <ServerButton tooltip="Add a Server">
                         <Plus className="h-6 w-6" />
                     </ServerButton>
-                    <Dialog>
+                    <Drawer>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <DialogTrigger asChild>
+                                <DrawerTrigger asChild>
                                     <button
                                     className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground transition-all duration-300 ease-in-out hover:bg-primary"
                                     >
                                     <Compass className="h-6 w-6" />
                                     </button>
-                                </DialogTrigger>
+                                </DrawerTrigger>
                             </TooltipTrigger>
                             <TooltipContent side="top">
                                 <p>Explore Servers</p>
                             </TooltipContent>
                         </Tooltip>
-                        <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                            <DialogHeader className="p-6 pb-2">
-                                <DialogTitle className="text-2xl font-bold">Explore Public Servers</DialogTitle>
-                                <DialogDescription>Find your next community. Here are some popular servers to get you started.</DialogDescription>
-                            </DialogHeader>
+                        <DrawerContent className="h-full top-0 rounded-none flex flex-col">
+                           <DrawerHeader className="p-6 pb-2 text-center">
+                                <DrawerTitle className="text-2xl font-bold">Explore Public Servers</DrawerTitle>
+                                <DrawerDescription>Find your next community. Here are some popular servers to get you started.</DrawerDescription>
+                            </DrawerHeader>
                             <ScrollArea className="flex-1">
                                 <div className="p-6 pt-2">
-                                <ExploreServers />
+                                    <ExploreServers />
                                 </div>
                             </ScrollArea>
-                        </DialogContent>
-                    </Dialog>
+                            <DrawerClose asChild className="absolute top-4 right-4">
+                              <Button variant="ghost" size="icon">
+                                <X className="h-4 w-4" />
+                                <span className="sr-only">Close</span>
+                              </Button>
+                            </DrawerClose>
+                        </DrawerContent>
+                    </Drawer>
                 </div>
             </nav>
         </div>

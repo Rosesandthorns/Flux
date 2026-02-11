@@ -3,7 +3,6 @@
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
-import { DrawerDescription, DrawerTitle } from '@/components/ui/drawer';
 
 const exploreServers = PlaceHolderImages.filter(img => img.id.startsWith('explore-server-'));
 
