@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Search, Check, X, Clock, Ban, UserPlus, Signal, Users, Settings, Mic, Headphones } from 'lucide-react';
+import { Search, Check, X, Clock, Ban, UserPlus, Signal, Users, Settings, Mic, Headphones, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,25 +12,83 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import DMChatArea from './DMChatArea';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
 import SettingsPage from './SettingsPage';
-import { useUserProfile } from '@/firebase';
-
-
-const dmContactsData: any[] = [];
-const pendingRequests: { id: string; name: string; avatarUrl?: string; avatarHint?: string }[] = [];
-
-type Contact = (typeof dmContactsData)[0];
+import { useUserProfile, useUser, useFirestore, useFriends, useFriendRequests, sendFriendRequest, acceptFriendRequest, declineOrCancelFriendRequest } from '@/firebase';
+import { useToast } from "@/hooks/use-toast";
+import type { FriendWithProfile, FriendRequestWithUserProfile } from '@/firebase/friends/types';
+import { Skeleton } from '../ui/skeleton';
 
 export default function DirectMessages() {
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [selectedContact, setSelectedContact] = useState<FriendWithProfile | null>(null);
   const { data: userProfile } = useUserProfile();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
   
-  const dmContacts = dmContactsData;
+  const { data: friends, loading: friendsLoading } = useFriends();
+  const { data: pendingRequests, loading: requestsLoading } = useFriendRequests();
+  
+  const [addFriendHandle, setAddFriendHandle] = useState("");
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
 
-  const onlineContacts = dmContacts.filter((c: any) => c.status === 'Online');
+  const handleSendRequest = async () => {
+    if (!user || !firestore || !addFriendHandle) return;
+
+    setIsSendingRequest(true);
+    try {
+      await sendFriendRequest(firestore, user.uid, addFriendHandle);
+      toast({
+        title: "Success!",
+        description: "Your friend request has been sent.",
+      });
+      setAddFriendHandle("");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    } finally {
+      setIsSendingRequest(false);
+    }
+  };
+
+  const handleAcceptRequest = async (request: FriendRequestWithUserProfile) => {
+    if (!firestore) return;
+    try {
+      await acceptFriendRequest(firestore, request.id!, request.fromUserId, request.toUserId);
+      toast({
+        title: "Friend Added!",
+        description: `You are now friends with ${request.fromUserProfile.displayName}.`
+      });
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not accept friend request.",
+      });
+    }
+  };
+  
+  const handleDeclineRequest = async (requestId: string) => {
+    if (!firestore) return;
+    try {
+      await declineOrCancelFriendRequest(firestore, requestId);
+      toast({
+        title: "Request Declined",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not decline friend request.",
+      });
+    }
+  };
+
+  const onlineContacts = friends?.filter((c) => c.userProfile.status === 'Online') || [];
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
-      {/* Sidebar with conversations and friend management */}
       <div className="w-full flex-shrink-0 border-r border-border/50 bg-secondary/30 flex flex-col md:w-80">
         <div className="p-4 pb-0">
             <div className="relative">
@@ -93,13 +151,13 @@ export default function DirectMessages() {
                     {onlineContacts.length > 0 ? onlineContacts.map((contact: any) => (
                          <button key={contact.id} onClick={() => setSelectedContact(contact)} className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}>
                             <Avatar className="h-10 w-10 relative">
-                                <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint={contact.avatarHint as string} />
-                                <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={contact.userProfile.photoURL} alt={contact.userProfile.displayName} />
+                                <AvatarFallback>{contact.userProfile.displayName.charAt(0)}</AvatarFallback>
                                 <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
                             </Avatar>
                             <div>
-                                <p className="font-semibold text-foreground">{contact.name}</p>
-                                <p className="text-xs text-muted-foreground">{contact.status}</p>
+                                <p className="font-semibold text-foreground">{contact.userProfile.displayName}</p>
+                                <p className="text-xs text-muted-foreground">{contact.userProfile.status}</p>
                             </div>
                         </button>
                     )) : (
@@ -107,19 +165,25 @@ export default function DirectMessages() {
                     )}
                 </TabsContent>
                 <TabsContent value="all">
-                     <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">All Friends — {dmContacts.length}</h2>
-                    {dmContacts.length > 0 ? dmContacts.map((contact: any) => (
+                     <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">All Friends — {friends?.length || 0}</h2>
+                    {friendsLoading ? (
+                      <div className="space-y-2 p-2">
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                      </div>
+                    ) : friends && friends.length > 0 ? friends.map((contact) => (
                         <button key={contact.id} onClick={() => setSelectedContact(contact)} className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}>
                             <Avatar className="h-10 w-10 relative">
-                                <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint={contact.avatarHint as string} />
-                                <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
-                                {contact.status === 'Online' && (
+                                {contact.userProfile.photoURL && <AvatarImage src={contact.userProfile.photoURL} alt={contact.userProfile.displayName} />}
+                                <AvatarFallback>{contact.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                {contact.userProfile.status === 'Online' && (
                                     <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
                                 )}
                             </Avatar>
                             <div>
-                                <p className="font-semibold text-foreground">{contact.name}</p>
-                                <p className="text-xs text-muted-foreground">{contact.status}</p>
+                                <p className="font-semibold text-foreground">{contact.userProfile.displayName}</p>
+                                <p className="text-xs text-muted-foreground">{contact.userProfile.status}</p>
                             </div>
                         </button>
                     )) : (
@@ -128,25 +192,30 @@ export default function DirectMessages() {
                 </TabsContent>
                 <TabsContent value="pending">
                     <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">Pending — {pendingRequests.length}</h2>
-                    {pendingRequests.length > 0 ? (
+                    {requestsLoading ? (
+                       <div className="space-y-2 p-2">
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
+                      </div>
+                    ) : pendingRequests.length > 0 ? (
                         <div className="space-y-1">
                             {pendingRequests.map(req => (
                                 <div key={req.id} className="flex w-full items-center rounded-md p-2 hover:bg-accent/80 justify-between">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-10 w-10">
-                                            {req.avatarUrl && <AvatarImage src={req.avatarUrl} alt={req.name} data-ai-hint={req.avatarHint as string} />}
-                                            <AvatarFallback>{req.name.charAt(0)}</AvatarFallback>
+                                            {req.fromUserProfile.photoURL && <AvatarImage src={req.fromUserProfile.photoURL} alt={req.fromUserProfile.displayName} />}
+                                            <AvatarFallback>{req.fromUserProfile.displayName.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-semibold">{req.name}</p>
+                                            <p className="font-semibold">{req.fromUserProfile.displayName}</p>
                                             <p className="text-xs text-muted-foreground">Incoming Friend Request</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-green-500/20 text-green-500 hover:bg-green-500/30 hover:text-green-400">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-green-500/20 text-green-500 hover:bg-green-500/30 hover:text-green-400" onClick={() => handleAcceptRequest(req)}>
                                             <Check className="h-4 w-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-destructive/20 text-destructive hover:bg-destructive/30 hover:text-destructive/80">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-destructive/20 text-destructive hover:bg-destructive/30 hover:text-destructive/80" onClick={() => handleDeclineRequest(req.id!)}>
                                             <X className="h-4 w-4" />
                                         </Button>
                                     </div>
@@ -165,11 +234,20 @@ export default function DirectMessages() {
                 <TabsContent value="add">
                     <div className="p-2">
                         <h2 className="text-lg font-bold uppercase">Add Friend</h2>
-                        <p className="text-muted-foreground text-sm mt-1 mb-4">You can add a friend with their username. It isn't case-sensitive.</p>
-                        <div className="relative rounded-md bg-background/50">
-                            <Input placeholder="Enter a username@flux" className="bg-transparent border-0 pr-48" />
-                            <Button className="absolute right-2 top-1/2 -translate-y-1/2 h-8 bg-primary hover:bg-primary/90">Send Friend Request</Button>
-                        </div>
+                        <p className="text-muted-foreground text-sm mt-1 mb-4">You can add a friend with their FluxID. It's case-sensitive!</p>
+                        <form onSubmit={(e) => { e.preventDefault(); handleSendRequest(); }} className="relative rounded-md bg-background/50">
+                            <Input 
+                              placeholder="Enter a username@flux" 
+                              className="bg-transparent border-0 pr-48"
+                              value={addFriendHandle}
+                              onChange={(e) => setAddFriendHandle(e.target.value)}
+                              disabled={isSendingRequest}
+                            />
+                            <Button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 bg-primary hover:bg-primary/90" disabled={isSendingRequest || !addFriendHandle}>
+                              {isSendingRequest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                              Send Friend Request
+                            </Button>
+                        </form>
                     </div>
                 </TabsContent>
             </div>
@@ -214,7 +292,17 @@ export default function DirectMessages() {
 
       {/* Main chat view */}
       <div className="hidden md:flex flex-1 flex-col bg-background">
-        {selectedContact ? <DMChatArea contact={selectedContact} /> : (
+        {selectedContact ? (
+            <DMChatArea 
+                contact={{
+                    id: selectedContact.id,
+                    name: selectedContact.userProfile.displayName,
+                    avatarUrl: selectedContact.userProfile.photoURL || '',
+                    avatarHint: '',
+                    status: selectedContact.userProfile.status,
+                }} 
+            />
+        ) : (
             <div className="flex-1 flex items-center justify-center p-6">
                 <div className="text-center">
                     <div className="text-5xl text-muted-foreground mb-4">📨</div>

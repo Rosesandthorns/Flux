@@ -10,6 +10,8 @@ import { useCollection } from './firestore/use-collection';
 import { useDoc } from './firestore/use-doc';
 import { useUserProfile } from './auth/use-user-profile';
 import { updateUserSettings } from './auth/settings';
+import { sendFriendRequest, acceptFriendRequest, declineOrCancelFriendRequest } from './friends/actions';
+import { useFriends, useFriendRequests } from './friends/hooks';
 
 function initializeFirebase(): { app: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null; } {
     if (typeof window === 'undefined') {
@@ -41,4 +43,9 @@ export {
   useDoc,
   useUserProfile,
   updateUserSettings,
+  sendFriendRequest,
+  acceptFriendRequest,
+  declineOrCancelFriendRequest,
+  useFriends,
+  useFriendRequests,
 };

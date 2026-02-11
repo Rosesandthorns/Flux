@@ -80,6 +80,47 @@
         }
       },
       "required": ["handle", "displayName", "email", "createdAt", "profileLastUpdatedAt", "status", "theme", "privacy", "notifications"]
+    },
+    "friend": {
+      "title": "Friend",
+      "description": "Represents a friendship link between two users.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the friend."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the friendship was established."
+        }
+      },
+      "required": ["userId", "createdAt"]
+    },
+    "friendRequest": {
+        "title": "Friend Request",
+        "description": "Represents a friend request sent from one user to another.",
+        "type": "object",
+        "properties": {
+            "fromUserId": {
+                "type": "string",
+                "description": "The UID of the user sending the request."
+            },
+            "toUserId": {
+                "type": "string",
+                "description": "The UID of the user receiving the request."
+            },
+            "status": {
+                "type": "string",
+                "enum": ["pending"],
+                "description": "The status of the friend request."
+            },
+            "createdAt": {
+                "type": "string",
+                "description": "The timestamp when the request was sent."
+            }
+        },
+        "required": ["fromUserId", "toUserId", "status", "createdAt"]
     }
   },
   "auth": {
@@ -91,6 +132,18 @@
         "$ref": "#/entities/userProfile"
       },
       "description": "Stores user profile information."
+    },
+    "/users/{userId}/friends/{friendId}": {
+      "schema": {
+        "$ref": "#/entities/friend"
+      },
+      "description": "A subcollection storing the user's friends."
+    },
+    "/friendRequests/{requestId}": {
+      "schema": {
+        "$ref": "#/entities/friendRequest"
+      },
+      "description": "Stores all friend requests between users."
     }
   }
 }
