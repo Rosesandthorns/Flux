@@ -76,6 +76,99 @@ body {
     --sidebar-border: 220 28% 15%;
     --sidebar-ring: 45 70% 55%;
   }
+
+  /* Void Theme */
+  .theme-void {
+    --background: 240 10% 3.9%; /* Midnight black */
+    --foreground: 210 40% 98%;
+    --card: 240 5.9% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262 85% 55%; /* Purple accent */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 262 85% 55%;
+  }
+
+  /* Bright Theme */
+  .theme-bright {
+    --background: 90 80% 97%; /* Bright whitish lime */
+    --foreground: 0 0% 3.9%; /* Black text */
+    --card: 90 70% 94%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 90 70% 94%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 200 80% 55%; /* Light blue accent */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 90 60% 90%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 90 60% 90%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 90 60% 90%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 90 50% 85%;
+    --input: 90 50% 85%;
+    --ring: 200 80% 55%;
+  }
+
+  /* Crimson Theme */
+  .theme-crimson {
+    /* Gradient handled by bg-gradient-* in the body tag */
+    --background: 347 72% 23%; /* Deep red crimson */
+    --foreground: 0 0% 98%;
+    --card: 347 60% 18%;
+    --card-foreground: 0 0% 98%;
+    --popover: 347 70% 15%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 95%; /* Black accent (using near white for primary text) */
+    --primary-foreground: 0 0% 3.9%;
+    --secondary: 347 50% 30%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 347 40% 35%;
+    --muted-foreground: 0 0% 80%;
+    --accent: 347 50% 30%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 347 40% 35%;
+    --input: 347 40% 35%;
+    --ring: 0 0% 95%;
+  }
+
+   /* Jade Theme */
+  .theme-jade {
+    --background: 160 20% 95%; /* Light, non-bright base */
+    --foreground: 160 10% 25%;
+    --card: 160 20% 100%;
+    --card-foreground: 160 10% 25%;
+    --popover: 160 20% 100%;
+    --popover-foreground: 160 10% 25%;
+    --primary: 158 64% 42%; /* Emerald */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 160 20% 90%;
+    --secondary-foreground: 160 10% 25%;
+    --muted: 160 20% 90%;
+    --muted-foreground: 160 10% 45%;
+    --accent: 160 20% 85%;
+    --accent-foreground: 160 10% 15%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 160 20% 80%;
+    --input: 160 20% 80%;
+    --ring: 158 64% 42%;
+  }
 }
 
 @layer base {
@@ -96,3 +189,5 @@ body {
     scrollbar-width: none;
   }
 }
+
+    
