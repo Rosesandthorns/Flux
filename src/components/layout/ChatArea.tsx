@@ -232,7 +232,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon"><Pin className="h-5 w-5" /></Button>
                 </SheetTrigger>
-                <SheetContent className="flex flex-col">
+                <SheetContent className="flex flex-col z-[200]">
                     <SheetHeader>
                         <SheetTitle>Pinned Messages in #{activeChannel.name}</SheetTitle>
                         <SheetDescription>
@@ -275,15 +275,20 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                     </ScrollArea>
                 </SheetContent>
             </Sheet>
-            <Sheet open={isMembersSheetOpen} onOpenChange={setIsMembersSheetOpen}>
+            <Sheet open={isMembersSheetOpen} onOpenChange={(open) => {
+                    console.log('[ChatArea Members Sheet] Open state changed:', open);
+                    setIsMembersSheetOpen(open);
+                }}>
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon"><Users className="h-5 w-5" /></Button>
                 </SheetTrigger>
                 <SheetContent 
-                    className="flex flex-col"
+                    className="flex flex-col z-[100]"
                     onPointerDownOutside={(e) => {
+                        console.log('[ChatArea Members Sheet] Pointer down outside. Target:', e.target);
                         const target = e.target as HTMLElement;
                         if (target.closest('[data-radix-popover-content]') || target.closest('[data-radix-select-content]') || target.closest('[data-radix-dialog-content]')) {
+                            console.log('[ChatArea Members Sheet] Pointer down was on a popover/dialog, preventing default.');
                             e.preventDefault();
                         }
                     }}
@@ -309,7 +314,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                                 {trialMembers.map(m => (
                                                     <div key={m.id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent group/member-item">
                                                         <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
-                                                             <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1 -m-2 p-2">
+                                                             <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1 -m-2 p-2" onClick={() => console.log(`[ChatArea Members Sheet] Clicked on trigger for ${m.userProfile.displayName}`)}>
                                                                 <Avatar className="h-9 w-9">
                                                                     <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
                                                                     <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
@@ -341,7 +346,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                                 {adminMembers.map(m => (
                                                      <div key={m.id} className="flex items-center gap-3 p-2 -m-2 rounded-md hover:bg-accent group/member-item">
                                                          <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
-                                                            <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1">
+                                                            <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1" onClick={() => console.log(`[ChatArea Members Sheet] Clicked on trigger for ${m.userProfile.displayName}`)}>
                                                                 <Avatar className="h-9 w-9">
                                                                     <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
                                                                     <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
@@ -361,7 +366,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                                 {regularMembers.map(m => (
                                                     <div key={m.id} className="flex items-center gap-3 p-2 -m-2 rounded-md hover:bg-accent group/member-item">
                                                         <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
-                                                            <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1">
+                                                            <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1" onClick={() => console.log(`[ChatArea Members Sheet] Clicked on trigger for ${m.userProfile.displayName}`)}>
                                                                 <Avatar className="h-9 w-9">
                                                                     <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
                                                                     <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>

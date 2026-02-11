@@ -181,9 +181,9 @@ export default function UserProfilePopover({ children, userId, serverId, current
     }
 
     return (
-        <Popover>
+        <Popover onOpenChange={(open) => console.log(`[UserProfilePopover] Popover for user ${userId} open state changed to: ${open}`)}>
             <PopoverTrigger asChild>{children}</PopoverTrigger>
-            <PopoverContent className="w-80 p-0"
+            <PopoverContent className="w-80 p-0 z-[200]"
              onPointerDownOutside={(e) => {
                   const target = e.target as HTMLElement;
                   if (target.closest('[data-radix-dialog-content]') || target.closest('[data-radix-select-content]')) {
