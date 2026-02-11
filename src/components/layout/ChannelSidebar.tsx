@@ -207,10 +207,10 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {canManageServer && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setShowInviteDialog(true) }}>Invite People</DropdownMenuItem>}
+            {canManageServer && <DropdownMenuItem onSelect={() => setShowInviteDialog(true)}>Invite People</DropdownMenuItem>}
             {canManageServer && (
               <ServerSettingsDialog serverId={serverId}>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <DropdownMenuItem>
                   Server Settings
                 </DropdownMenuItem>
               </ServerSettingsDialog>
@@ -446,5 +446,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
       </AlertDialog>
     </div>
   );
+
+    
 
     
