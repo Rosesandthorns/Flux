@@ -279,6 +279,31 @@
         }
       },
       "required": ["authorId", "authorDisplayName", "text", "createdAt", "channelId"]
+    },
+    "voiceParticipant": {
+      "title": "Voice Channel Participant",
+      "description": "A user currently in a voice channel.",
+      "type": "object",
+      "properties": {
+        "peerId": {
+          "type": "string",
+          "description": "The PeerJS ID of the participant."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "The URL of the user's profile picture."
+        }
+      },
+      "required": ["peerId", "userId", "displayName"]
     }
   },
   "auth": {
@@ -332,6 +357,12 @@
         "$ref": "#/entities/serverMessage"
       },
       "description": "Stores messages for a server channel."
+    },
+    "/servers/{serverId}/channels/{channelId}/participants/{userId}": {
+      "schema": {
+        "$ref": "#/entities/voiceParticipant"
+      },
+      "description": "Stores active participants in a voice channel for real-time WebRTC signaling."
     }
   }
 }

@@ -41,3 +41,10 @@ export interface ServerMessage {
 }
 
 export type ServerMessagePayload = Omit<ServerMessage, 'id' | 'createdAt' | 'channelId' | 'editedAt' | 'pinned'>;
+
+export interface VoiceParticipant {
+  userId: string;
+  peerId: string;
+  displayName: string;
+  photoURL: string;
+}

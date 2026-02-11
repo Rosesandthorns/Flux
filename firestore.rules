@@ -91,6 +91,11 @@ service cloud.firestore {
         allow read: if isProperMember(serverId);
         allow create, update, delete: if isServerAdmin(serverId);
 
+        match /participants/{userId} {
+            allow read: if isProperMember(serverId);
+            allow write: if request.auth.uid == userId;
+        }
+
         match /messages/{messageId} {
             allow read: if canReadChannelContent(serverId, channelId);
             allow create: if request.auth.uid == request.resource.data.authorId && canWriteToChannel(serverId, channelId);

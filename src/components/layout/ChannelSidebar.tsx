@@ -91,9 +91,8 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   const voiceChannels = visibleChannels?.filter((c) => c.type === 'voice') || [];
 
   const {
-    activeVoiceChannel,
+    activeVoiceChannel: vc,
     participants,
-    speakingParticipantId,
     isMuted,
     isDeafened,
     joinChannel,
@@ -164,20 +163,20 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             </h2>
             {canManageServer && (
               <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <CreateChannelDialog serverId={serverId} channelType="text">
-                        <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        >
-                        <Plus className="h-4 w-4" />
-                        </Button>
-                    </CreateChannelDialog>
-                  </TooltipTrigger>
-                  <TooltipContent>Create Channel</TooltipContent>
-                </Tooltip>
+                <CreateChannelDialog serverId={serverId} channelType="text">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          >
+                          <Plus className="h-4 w-4" />
+                          </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Create Channel</TooltipContent>
+                    </Tooltip>
+                </CreateChannelDialog>
               </TooltipProvider>
             )}
           </div>
@@ -214,9 +213,9 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             </h2>
             {canManageServer && (
               <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                      <CreateChannelDialog serverId={serverId} channelType="voice">
+                <CreateChannelDialog serverId={serverId} channelType="voice">
+                  <Tooltip>
+                      <TooltipTrigger asChild>
                           <Button
                           variant="ghost"
                           size="icon"
@@ -224,10 +223,10 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
                           >
                           <Plus className="h-4 w-4" />
                           </Button>
-                      </CreateChannelDialog>
-                    </TooltipTrigger>
-                  <TooltipContent>Create Channel</TooltipContent>
-                </Tooltip>
+                      </TooltipTrigger>
+                    <TooltipContent>Create Channel</TooltipContent>
+                  </Tooltip>
+                </CreateChannelDialog>
               </TooltipProvider>
             )}
           </div>
@@ -235,10 +234,10 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             <div key={channel.id}>
               <div className="group relative flex items-center pr-2">
                 <button
-                  onClick={() => joinChannel(channel.name)}
+                  onClick={() => joinChannel(serverId, channel.id!, channel.name)}
                   className={cn(
                     'flex flex-1 items-center rounded-md py-1.5 pl-2 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
-                    activeVoiceChannel === channel.name &&
+                    vc?.channelId === channel.id &&
                       'bg-accent text-accent-foreground'
                   )}
                 >
@@ -257,27 +256,24 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
                   </EditChannelDialog>
                 )}
               </div>
-              {activeVoiceChannel === channel.name && (
+              {vc?.channelId === channel.id && (
                 <div className="pt-2 pl-6">
                   <TooltipProvider>
                     <div className="flex flex-wrap gap-2">
                       {participants.map((p) => (
-                        <Tooltip key={p.id}>
+                        <Tooltip key={p.userId}>
                           <TooltipTrigger>
                             <Avatar
                               className={cn(
-                                'h-8 w-8 ring-2 ring-offset-background ring-offset-2 transition-all',
-                                speakingParticipantId === p.id && !isDeafened
-                                  ? 'ring-primary'
-                                  : 'ring-transparent'
+                                'h-8 w-8 ring-2 ring-offset-background ring-offset-2 transition-all ring-transparent'
                               )}
                             >
-                              <AvatarImage src={p.avatarUrl} alt={p.name} />
-                              <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
+                              <AvatarImage src={p.photoURL} alt={p.displayName} />
+                              <AvatarFallback>{p.displayName.charAt(0)}</AvatarFallback>
                             </Avatar>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{p.name}</p>
+                            <p>{p.displayName}</p>
                           </TooltipContent>
                         </Tooltip>
                       ))}
@@ -296,7 +292,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             </div>
           )}
       </div>
-      {activeVoiceChannel && (
+      {vc && (
         <div className="shrink-0 border-t border-border/50 bg-background/30 p-2">
           <div className="flex items-center justify-between">
             <div>
@@ -304,7 +300,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
                 Voice Connected
               </p>
               <p className="text-sm text-muted-foreground">
-                {activeVoiceChannel}
+                {vc.channelName}
               </p>
             </div>
             <Button
