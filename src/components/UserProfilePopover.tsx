@@ -5,6 +5,9 @@ import {
   SheetContent,
   SheetTrigger,
   SheetClose,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { X } from 'lucide-react';
@@ -37,10 +40,10 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
+  DialogDescription as DialogDesc,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  DialogHeader as DialogHeaderComponent,
+  DialogTitle as DialogTitleComponent,
   DialogTrigger,
 } from './ui/dialog';
 import {
@@ -318,6 +321,12 @@ export default function UserProfilePopover({
           }
         }}
       >
+        <SheetHeader className="sr-only">
+          <SheetTitle>User Profile</SheetTitle>
+          <SheetDescription>
+            {`Profile for ${userProfile?.displayName || 'user'}. View details or manage roles.`}
+          </SheetDescription>
+        </SheetHeader>
         <div className="absolute top-4 right-4 z-20">
           <SheetClose asChild>
             <Button
@@ -453,15 +462,15 @@ export default function UserProfilePopover({
                             <Button variant="outline">Edit Profile</Button>
                           </DialogTrigger>
                           <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>
+                            <DialogHeaderComponent>
+                              <DialogTitleComponent>
                                 Edit {userProfile.displayName}'s Profile
-                              </DialogTitle>
-                              <DialogDescription>
+                              </DialogTitleComponent>
+                              <DialogDesc>
                                 Make changes to your profile here. Click save
                                 when you're done.
-                              </DialogDescription>
-                            </DialogHeader>
+                              </DialogDesc>
+                            </DialogHeaderComponent>
                             <Form {...form}>
                               <form
                                 onSubmit={form.handleSubmit(onProfileSubmit)}
