@@ -183,7 +183,14 @@ export default function UserProfilePopover({ children, userId, serverId, current
     return (
         <Popover>
             <PopoverTrigger asChild>{children}</PopoverTrigger>
-            <PopoverContent className="w-80 p-0 z-[115]">
+            <PopoverContent className="w-80 p-0"
+             onPointerDownOutside={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.closest('[data-radix-dialog-content]') || target.closest('[data-radix-select-content]')) {
+                      e.preventDefault();
+                  }
+              }}
+            >
                 {profileLoading || (serverId && memberLoading) ? (
                     <div className="p-4 space-y-2">
                         <Skeleton className="h-20 w-20 rounded-full" />
@@ -212,7 +219,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select role" />
                                                 </SelectTrigger>
-                                                <SelectContent className="z-[115]">
+                                                <SelectContent>
                                                     {rolesThatCanBeAssigned.map(role => (
                                                         <SelectItem key={role} value={role} className="capitalize">{role}</SelectItem>
                                                     ))}

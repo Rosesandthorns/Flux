@@ -35,6 +35,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { serverTimestamp } from "firebase/firestore";
 import { add, formatDistanceToNow } from "date-fns";
+import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
 
 type SettingsCategory = "My Account" | "Profiles" | "Privacy & Safety" | "Notifications" | "Keybinds";
 
@@ -484,12 +485,6 @@ export default function SettingsPage() {
             <ScrollArea className="flex-1">
                 <div 
                     className="p-8 max-w-4xl mx-auto"
-                    onPointerDownOutside={(e: any) => {
-                        const target = e.target as HTMLElement;
-                        if (target.closest('[data-radix-dialog-content]')) {
-                            e.preventDefault();
-                        }
-                    }}
                 >
                     {renderContent()}
                 </div>
