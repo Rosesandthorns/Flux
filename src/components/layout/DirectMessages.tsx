@@ -25,10 +25,7 @@ const dmContactsData = PlaceHolderImages.filter(img => img.id.startsWith('chat-a
 }));
 
 // Mock data for pending requests
-const pendingRequests = [
-    { id: 'pending-1', name: 'David', avatarUrl: PlaceHolderImages.find(i => i.id === 'chat-avatar-1')?.imageUrl, avatarHint: 'person' },
-    { id: 'pending-2', name: 'Eve', avatarUrl: PlaceHolderImages.find(i => i.id === 'chat-avatar-2')?.imageUrl, avatarHint: 'person' },
-];
+const pendingRequests: { id: string; name: string; avatarUrl?: string; avatarHint?: string }[] = [];
 
 const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
 
@@ -38,6 +35,8 @@ export default function DirectMessages() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   
   const dmContacts = dmContactsData;
+
+  const onlineContacts = dmContacts.filter(c => c.status === 'Online');
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
@@ -100,8 +99,8 @@ export default function DirectMessages() {
 
             <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                 <TabsContent value="online">
-                    <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">Online — {dmContacts.filter(c => c.status === 'Online').length}</h2>
-                    {dmContacts.filter(c => c.status === 'Online').map(contact => (
+                    <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">Online — {onlineContacts.length}</h2>
+                    {onlineContacts.length > 0 ? onlineContacts.map(contact => (
                          <button key={contact.id} onClick={() => setSelectedContact(contact)} className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}>
                             <Avatar className="h-10 w-10 relative">
                                 <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint={contact.avatarHint as string} />
@@ -113,11 +112,13 @@ export default function DirectMessages() {
                                 <p className="text-xs text-muted-foreground">{contact.status}</p>
                             </div>
                         </button>
-                    ))}
+                    )) : (
+                        <div className="text-center text-muted-foreground p-8">No one's around.</div>
+                    )}
                 </TabsContent>
                 <TabsContent value="all">
                      <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">All Friends — {dmContacts.length}</h2>
-                    {dmContacts.map(contact => (
+                    {dmContacts.length > 0 ? dmContacts.map(contact => (
                         <button key={contact.id} onClick={() => setSelectedContact(contact)} className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}>
                             <Avatar className="h-10 w-10 relative">
                                 <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint={contact.avatarHint as string} />
@@ -131,34 +132,40 @@ export default function DirectMessages() {
                                 <p className="text-xs text-muted-foreground">{contact.status}</p>
                             </div>
                         </button>
-                    ))}
+                    )) : (
+                         <div className="text-center text-muted-foreground p-8">You have no friends. Try adding some!</div>
+                    )}
                 </TabsContent>
                 <TabsContent value="pending">
                     <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">Pending — {pendingRequests.length}</h2>
-                     <div className="space-y-1">
-                        {pendingRequests.map(req => (
-                            <div key={req.id} className="flex w-full items-center rounded-md p-2 hover:bg-accent/80 justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="h-10 w-10">
-                                        {req.avatarUrl && <AvatarImage src={req.avatarUrl} alt={req.name} data-ai-hint={req.avatarHint as string} />}
-                                        <AvatarFallback>{req.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="font-semibold">{req.name}</p>
-                                        <p className="text-xs text-muted-foreground">Incoming Friend Request</p>
+                    {pendingRequests.length > 0 ? (
+                        <div className="space-y-1">
+                            {pendingRequests.map(req => (
+                                <div key={req.id} className="flex w-full items-center rounded-md p-2 hover:bg-accent/80 justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-10 w-10">
+                                            {req.avatarUrl && <AvatarImage src={req.avatarUrl} alt={req.name} data-ai-hint={req.avatarHint as string} />}
+                                            <AvatarFallback>{req.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold">{req.name}</p>
+                                            <p className="text-xs text-muted-foreground">Incoming Friend Request</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-green-500/20 text-green-500 hover:bg-green-500/30 hover:text-green-400">
+                                            <Check className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-destructive/20 text-destructive hover:bg-destructive/30 hover:text-destructive/80">
+                                            <X className="h-4 w-4" />
+                                        </Button>
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-green-500/20 text-green-500 hover:bg-green-500/30 hover:text-green-400">
-                                        <Check className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-destructive/20 text-destructive hover:bg-destructive/30 hover:text-destructive/80">
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center text-muted-foreground p-8">There are no pending friend requests.</div>
+                    )}
                 </TabsContent>
                  <TabsContent value="blocked">
                      <div className="text-center text-muted-foreground p-8">

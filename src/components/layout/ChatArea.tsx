@@ -5,12 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-const messages = [
-  { id: 1, user: 'Alice', avatarId: 'chat-avatar-1', time: '10:30 AM', text: "Hey everyone, what's up?" },
-  { id: 2, user: 'Bob', avatarId: 'chat-avatar-2', time: '10:31 AM', text: "Not much, just working on the new Flux design. It's looking pretty sweet with that Electric Violet accent! 🚀" },
-  { id: 3, user: 'Alice', avatarId: 'chat-avatar-1', time: '10:32 AM', text: 'I know right! The glassmorphism effect is fire. 🔥' },
-  { id: 4, user: 'Charlie', avatarId: 'chat-avatar-3', time: '10:35 AM', text: 'Just joined. Did I hear glassmorphism? Count me in. Loving the deep charcoal theme.' },
-];
+const messages: { id: number, user: string, avatarId: string, time: string, text: string }[] = [];
 
 const chatAvatars = PlaceHolderImages.filter(img => img.id.startsWith('chat-avatar-'));
 
@@ -31,7 +26,7 @@ export default function ChatArea() {
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4 space-y-4">
-            {messages.map((msg) => {
+            {messages.length > 0 ? messages.map((msg) => {
               const avatarData = chatAvatars.find(a => a.id === msg.avatarId);
               return (
                 <div key={msg.id} className="flex items-start gap-3">
@@ -48,7 +43,17 @@ export default function ChatArea() {
                   </div>
                 </div>
               );
-            })}
+            }) : (
+              <div className="flex items-start gap-4 pt-8 pl-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                    <Hash className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div>
+                    <h3 className="text-2xl font-bold">Welcome to #general!</h3>
+                    <p className="text-muted-foreground">This is the beginning of the #general channel.</p>
+                </div>
+              </div>
+            )}
           </div>
         </ScrollArea>
       </div>

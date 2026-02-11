@@ -6,27 +6,21 @@ import Image from 'next/image';
 
 const exploreServers = PlaceHolderImages.filter(img => img.id.startsWith('explore-server-'));
 
-const serverData = [
-  { title: "Gamer's Hub", description: 'A community for gamers to connect and play together.', imageId: 'explore-server-1' },
-  { title: "Art & Design", description: 'Share your creations and get feedback from fellow artists.', imageId: 'explore-server-2' },
-  { title: "Music Lovers", description: 'Discuss your favorite music genres, artists, and albums.', imageId: 'explore-server-3' },
-  { title: "Tech Talk", description: 'All things tech, from hardware to software.', imageId: 'explore-server-4' },
-  { title: "Book Nook", description: 'A cozy corner for bookworms to discuss their latest reads.', imageId: 'explore-server-5' },
-  { title: "Fitness Fanatics", description: 'Stay motivated and share your fitness journey.', imageId: 'explore-server-6' },
-  { title: "Pet Paradise", description: "For all the animal lovers out there.", imageId: "explore-server-7" },
-  { title: "Writers' Corner", description: "Share your writing and get feedback.", imageId: "explore-server-8" },
-  { title: "Study Group", description: "Find people to study with.", imageId: "explore-server-9" },
-  { title: "Movie Buffs", description: "For cinephiles to discuss films, from blockbusters to indies.", imageId: "explore-server-10" },
-  { title: "Developers", description: "Talk about code and new technologies.", imageId: "explore-server-11" },
-  { title: "Travel Bugs", description: "Share your travel stories and tips.", imageId: "explore-server-12" },
-  { title: "Foodies Unite", description: 'Share recipes, restaurant reviews, and culinary adventures.', imageId: 'explore-server-1' },
-  { title: "DIY & Crafts", description: "A space for all your DIY projects.", imageId: "explore-server-2" },
-  { title: "History Buffs", description: "Discuss historical events and figures.", imageId: "explore-server-3" },
-  { title: "Photography", description: "A community for photographers.", imageId: "explore-server-4" },
-];
+const serverData: { title: string; description: string; imageId: string }[] = [];
 
 
 export default function ExploreServers() {
+  if (serverData.length === 0) {
+    return (
+        <div className="flex h-full w-full items-center justify-center">
+            <div className="text-center text-muted-foreground">
+                <h2 className="text-2xl font-semibold">No servers to explore</h2>
+                <p>Check back later for public servers to join.</p>
+            </div>
+        </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {serverData.map((server, index) => {
