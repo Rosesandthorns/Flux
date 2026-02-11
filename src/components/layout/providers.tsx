@@ -7,6 +7,8 @@ import { initializeFirebase, FirebaseClientProvider } from "@/firebase";
 import AuthGuard from "../AuthGuard";
 import ServerRail from "./ServerRail";
 import { BlockProvider } from "@/context/BlockContext";
+import { DMCallProvider } from "@/context/DMCallContext";
+import DMCallManager from "../calls/DMCallManager";
 
 const { app, auth, firestore } = initializeFirebase();
 
@@ -16,13 +18,18 @@ export function Providers({ children }: { children: ReactNode }) {
             <ThemeProvider>
                 <BlockProvider>
                     <VoiceProvider>
-                        <AuthGuard>
-                            {children}
-                            <ServerRail />
-                        </AuthGuard>
+                        <DMCallProvider>
+                            <AuthGuard>
+                                {children}
+                                <ServerRail />
+                                <DMCallManager />
+                            </AuthGuard>
+                        </DMCallProvider>
                     </VoiceProvider>
                 </BlockProvider>
             </ThemeProvider>
         </FirebaseClientProvider>
     );
 }
+
+    

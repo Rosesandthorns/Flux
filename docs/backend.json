@@ -326,6 +326,36 @@
         }
       },
       "required": ["peerId", "userId", "displayName"]
+    },
+    "dmCall": {
+      "title": "Direct Message Call",
+      "description": "Represents a peer-to-peer call in a direct message.",
+      "type": "object",
+      "properties": {
+        "callerId": {
+          "type": "string"
+        },
+        "callerPeerId": {
+          "type": "string"
+        },
+        "receiverId": {
+          "type": "string"
+        },
+        "receiverPeerId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["ringing", "connected", "ended", "declined", "missed", "cancelled"]
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "endedAt": {
+            "type": "string"
+        }
+      },
+      "required": ["callerId", "callerPeerId", "receiverId", "status", "createdAt"]
     }
   },
   "auth": {
@@ -362,6 +392,12 @@
       },
       "description": "Stores messages for a direct message conversation."
     },
+    "/dmCalls/{callId}": {
+      "schema": {
+        "$ref": "#/entities/dmCall"
+      },
+      "description": "Stores state for direct message peer-to-peer calls."
+    },
     "/servers/{serverId}": {
       "schema": {
         "$ref": "#/entities/server"
@@ -394,3 +430,5 @@
     }
   }
 }
+
+    

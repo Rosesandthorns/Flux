@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import UserProfilePopover from '../UserProfilePopover';
+import { useDMCall } from '@/context/DMCallContext';
 
 interface DMChatAreaProps {
     contact: FriendWithProfile;
@@ -48,6 +49,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
     const firestore = useFirestore();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
+    const { startCall } = useDMCall();
 
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
@@ -65,6 +67,10 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
     const editForm = useForm<z.infer<typeof editFormSchema>>({
         resolver: zodResolver(editFormSchema),
     });
+
+    const handleCall = () => {
+        startCall(contact.id);
+    }
 
     async function onMessageSubmit(values: z.infer<typeof messageFormSchema>) {
         if (!firestore || !conversationId || !user || !userProfile) return;
@@ -148,7 +154,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
             </div>
         </UserProfilePopover>
         <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={handleCall}>
                 <Phone className="h-5 w-5" />
             </Button>
         </div>
@@ -302,3 +308,5 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
     </div>
   );
 }
+
+    

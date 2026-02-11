@@ -10,7 +10,7 @@ import { useCollection } from './firestore/use-collection';
 import { useDoc } from './firestore/use-doc';
 import { useUserProfile } from './auth/use-user-profile';
 import { updateUserSettings } from './auth/settings';
-import { deleteUserDocument } from './auth/users';
+import { deleteUserDocument, getUserProfiles } from './auth/users';
 import { sendFriendRequest, acceptFriendRequest, declineOrCancelFriendRequest, blockUser, unblockUser, removeFriend } from './friends/actions';
 import { useFriends, useFriendRequests } from './friends/hooks';
 import { useMessages } from './messages/hooks';
@@ -18,6 +18,8 @@ import { sendMessage, editMessage, deleteMessage } from './messages/actions';
 import type { Message } from './messages/types';
 import { createServer, joinServer, sendServerMessage, createChannel, leaveServer, updateChannel, editServerMessage, deleteServerMessage, togglePinServerMessage, updateUserRole, kickServerMember, deleteChannel, updateServer, deleteServer, transferServerOwnership } from './servers/actions';
 import { useUserServers, useServer, useServerChannels, useServerMessages, useServerMember, useChannelParticipants, useServerMembers } from './servers/hooks';
+import { startCall, answerCall, declineCall, cancelCall, endCall } from './calls/actions';
+import type { DMCall, DMCallStatus, DMCallWithProfiles } from './calls/types';
 
 function initializeFirebase(): { app: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null; } {
     if (typeof window === 'undefined') {
@@ -76,6 +78,7 @@ export {
   useChannelParticipants,
   updateUserRole,
   deleteUserDocument,
+  getUserProfiles,
   kickServerMember,
   deleteChannel,
   updateServer,
@@ -84,5 +87,12 @@ export {
   blockUser,
   unblockUser,
   removeFriend,
+  startCall,
+  answerCall,
+  declineCall,
+  cancelCall,
+  endCall,
 };
-export type { Message };
+export type { Message, DMCall, DMCallStatus, DMCallWithProfiles };
+
+    

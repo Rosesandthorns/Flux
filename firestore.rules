@@ -108,6 +108,25 @@ service cloud.firestore {
         allow delete: if request.auth.uid == resource.data.authorId || isGlobalAdmin();
       }
     }
+    
+    match /dmCalls/{callId} {
+      function isCaller() { return request.auth.uid == resource.data.callerId; }
+      function isReceiver() { return request.auth.uid == resource.data.receiverId; }
+      
+      allow read: if isCaller() || isReceiver();
+      
+      allow create: if request.auth.uid == request.resource.data.callerId 
+                    && request.resource.data.status == 'ringing'
+                    && !isBlocked(request.resource.data.callerId, request.resource.data.receiverId);
+      
+      allow update: if 
+        // Receiver answers or declines
+        (isReceiver() && resource.data.status == 'ringing' && request.resource.data.status in ['connected', 'declined']) ||
+        // Caller cancels
+        (isCaller() && resource.data.status == 'ringing' && request.resource.data.status == 'cancelled') ||
+        // Either party ends the call
+        ((isCaller() || isReceiver()) && resource.data.status == 'connected' && request.resource.data.status == 'ended');
+    }
 
     match /servers/{serverId} {
       allow read: if isServerMember(serverId);
@@ -141,3 +160,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

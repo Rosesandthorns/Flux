@@ -1,5 +1,5 @@
 'use client';
-import { doc, setDoc, serverTimestamp, type Firestore, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, type Firestore, deleteDoc, collection, where, getDocs, query } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Theme } from '@/context/ThemeContext';
@@ -71,3 +71,30 @@ export const deleteUserDocument = (firestore: Firestore, userId: string) => {
         throw serverError;
     });
 };
+
+export const getUserProfiles = async (firestore: Firestore, userIds: string[]): Promise<Record<string, UserProfile>> => {
+    const profiles: Record<string, UserProfile> = {};
+    if (!userIds || userIds.length === 0) {
+        return profiles;
+    }
+
+    // Firestore 'in' queries are limited to 30 items.
+    const chunks = [];
+    for (let i = 0; i < userIds.length; i += 30) {
+        chunks.push(userIds.slice(i, i + 30));
+    }
+
+    for (const chunk of chunks) {
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('__name__', 'in', chunk));
+        const snapshot = await getDocs(q);
+
+        snapshot.forEach(doc => {
+            profiles[doc.id] = { id: doc.id, ...doc.data() } as UserProfile;
+        });
+    }
+
+    return profiles;
+};
+
+    
