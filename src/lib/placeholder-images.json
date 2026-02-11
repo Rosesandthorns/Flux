@@ -77,6 +77,42 @@
       "description": "Explore server image 6",
       "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmaXRuZXNzJTIwZmFuYXRpY3N8ZW58MHx8fHwxNzExMDgwMzM4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "fitness fanatics"
+    },
+    {
+      "id": "explore-server-7",
+      "description": "Explore server image 7",
+      "imageUrl": "https://images.unsplash.com/photo-1517849845537-4d257902454a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXRzJTIwY29tbXVuaXR5fGVufDB8fHx8MTc3MDgwODAwMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pets community"
+    },
+    {
+      "id": "explore-server-8",
+      "description": "Explore server image 8",
+      "imageUrl": "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3cml0ZXJzJTIwY29ybmVyfGVufDB8fHx8MTc3MDgwODAxMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "writers corner"
+    },
+    {
+      "id": "explore-server-9",
+      "description": "Explore server image 9",
+      "imageUrl": "https://images.unsplash.com/photo-1543269865-cbf427effbad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdHVkeSUyMGdyb3VwfGVufDB8fHx8MTc3MDgwODAyMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "study group"
+    },
+    {
+      "id": "explore-server-10",
+      "description": "Explore server image 10",
+      "imageUrl": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtb3ZpZSUyMGJ1ZmZzfGVufDB8fHx8MTc3MDgwODAzMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "movie buffs"
+    },
+    {
+      "id": "explore-server-11",
+      "description": "Explore server image 11",
+      "imageUrl": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwZGV2ZWxvcGVyc3xlbnwwfHx8fDE3NzA4MDgwNDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "tech developers"
+    },
+    {
+      "id": "explore-server-12",
+      "description": "Explore server image 12",
+      "imageUrl": "https://images.unsplash.com/photo-1519681393784-d120267933ba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx0cmF2ZWx8ZW58MHx8fHwxNzcwODA4MDUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "travel landscape"
     }
   ]
 }

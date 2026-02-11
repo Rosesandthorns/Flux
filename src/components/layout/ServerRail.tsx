@@ -4,8 +4,9 @@ import { Home, Plus, Compass } from 'lucide-react';
 import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import ExploreServers from './ExploreServers';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const servers = PlaceHolderImages.filter(img => img.id.startsWith('server-'));
 
@@ -58,25 +59,33 @@ export default function ServerRail() {
                 <ServerButton tooltip="Add a Server">
                     <Plus className="h-6 w-6" />
                 </ServerButton>
-                <Drawer snapPoints={[1]}>
+                <Dialog>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <DrawerTrigger asChild>
+                            <DialogTrigger asChild>
                                 <button
                                 className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground transition-all duration-300 ease-in-out hover:bg-primary"
                                 >
                                 <Compass className="h-6 w-6" />
                                 </button>
-                            </DrawerTrigger>
+                            </DialogTrigger>
                         </TooltipTrigger>
                         <TooltipContent side="top">
                             <p>Explore Servers</p>
                         </TooltipContent>
                     </Tooltip>
-                    <DrawerContent>
-                        <ExploreServers />
-                    </DrawerContent>
-                </Drawer>
+                    <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                        <DialogHeader className="p-6 pb-2">
+                            <DialogTitle className="text-2xl font-bold">Explore Public Servers</DialogTitle>
+                            <DialogDescription>Find your next community. Here are some popular servers to get you started.</DialogDescription>
+                        </DialogHeader>
+                        <ScrollArea className="flex-1">
+                            <div className="p-6 pt-2">
+                               <ExploreServers />
+                            </div>
+                        </ScrollArea>
+                    </DialogContent>
+                </Dialog>
             </div>
         </nav>
     </TooltipProvider>
