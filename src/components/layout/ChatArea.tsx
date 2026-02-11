@@ -283,7 +283,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                     className="flex flex-col z-[100]"
                     onPointerDownOutside={(e) => {
                         const target = e.target as HTMLElement;
-                        if (target.closest('[data-radix-popover-content]') || target.closest('[data-radix-select-content]') || target.closest('[data-radix-dialog-content]')) {
+                        if (target.closest('[data-radix-dialog-content]') || target.closest('[data-radix-select-content]')) {
                             e.preventDefault();
                         }
                     }}
