@@ -105,7 +105,7 @@ export default function DirectMessages() {
 
         <div className="flex-1 flex flex-col overflow-hidden px-4 pt-4">
             <Tabs defaultValue="all" className="flex flex-col h-full">
-                 <div className="md:flex-1 md:overflow-y-auto pr-2 -mr-2">
+                 <div className="md:order-2 flex-1 overflow-y-auto pr-2 -mr-2">
                     <TabsContent value="online">
                         <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">Online — {onlineContacts.length}</h2>
                         {onlineContacts.length > 0 ? onlineContacts.map((contact) => (
@@ -212,7 +212,7 @@ export default function DirectMessages() {
                     </TabsContent>
                 </div>
 
-                <div className="mt-auto">
+                <div className="mt-auto md:order-first md:mt-0">
                     <Separator className="my-3 bg-border/50 hidden md:block" />
                     <TooltipProvider>
                         <TabsList className="flex items-center gap-3 bg-transparent p-0 h-auto md:bg-muted md:p-1 md:rounded-md">
