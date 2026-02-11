@@ -279,7 +279,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon"><Users className="h-5 w-5" /></Button>
                 </SheetTrigger>
-                <SheetContent className="z-[111] flex flex-col">
+                <SheetContent className="flex flex-col">
                     <SheetHeader>
                         <SheetTitle>Server Members</SheetTitle>
                         <SheetDescription>
@@ -299,16 +299,16 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                             <h3 className="text-sm font-semibold uppercase text-amber-500 mb-2">Trial Members — {trialMembers.length}</h3>
                                             <div className="space-y-2">
                                                 {trialMembers.map(m => (
-                                                    <div key={m.id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
-                                                        <div className="flex items-center gap-3">
-                                                            <Avatar className="h-9 w-9">
-                                                                <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
-                                                                <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
-                                                            </Avatar>
-                                                            <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
-                                                                <p className="font-semibold hover:underline cursor-pointer">{m.userProfile.displayName}</p>
-                                                            </UserProfilePopover>
-                                                        </div>
+                                                    <div key={m.id} className="flex items-center justify-between p-2 rounded-md">
+                                                        <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                             <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1 -m-2 p-2 hover:bg-accent">
+                                                                <Avatar className="h-9 w-9">
+                                                                    <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
+                                                                    <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                                                </Avatar>
+                                                                <p className="font-semibold">{m.userProfile.displayName}</p>
+                                                            </div>
+                                                        </UserProfilePopover>
                                                         {isUpdatingTrialMember === m.id ? (
                                                             <Loader2 className="h-5 w-5 animate-spin" />
                                                         ) : (
@@ -331,15 +331,15 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                             <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Admins — {adminMembers.length}</h3>
                                             <div className="space-y-2">
                                                 {adminMembers.map(m => (
-                                                    <div key={m.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                                                        <Avatar className="h-9 w-9">
-                                                            <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
-                                                            <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
-                                                        </Avatar>
-                                                        <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
-                                                            <p className="font-semibold hover:underline cursor-pointer">{m.userProfile.displayName}</p>
-                                                        </UserProfilePopover>
-                                                    </div>
+                                                     <UserProfilePopover key={m.id} userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                        <div className="flex items-center gap-3 p-2 -m-2 rounded-md hover:bg-accent cursor-pointer">
+                                                            <Avatar className="h-9 w-9">
+                                                                <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
+                                                                <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                                            </Avatar>
+                                                            <p className="font-semibold">{m.userProfile.displayName}</p>
+                                                        </div>
+                                                    </UserProfilePopover>
                                                 ))}
                                             </div>
                                         </div>
@@ -349,15 +349,15 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                             <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Members — {regularMembers.length}</h3>
                                             <div className="space-y-2">
                                                 {regularMembers.map(m => (
-                                                     <div key={m.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                                                         <Avatar className="h-9 w-9">
-                                                            <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
-                                                            <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
-                                                        </Avatar>
-                                                        <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
-                                                            <p className="font-semibold hover:underline cursor-pointer">{m.userProfile.displayName}</p>
-                                                        </UserProfilePopover>
-                                                    </div>
+                                                    <UserProfilePopover key={m.id} userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                        <div className="flex items-center gap-3 p-2 -m-2 rounded-md hover:bg-accent cursor-pointer">
+                                                            <Avatar className="h-9 w-9">
+                                                                <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
+                                                                <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                                            </Avatar>
+                                                            <p className="font-semibold">{m.userProfile.displayName}</p>
+                                                        </div>
+                                                    </UserProfilePopover>
                                                 ))}
                                             </div>
                                         </div>
