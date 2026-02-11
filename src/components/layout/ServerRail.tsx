@@ -24,8 +24,8 @@ export default function ServerRail({ activeServerId }: { activeServerId?: string
     
     return (
     <TooltipProvider delayDuration={0}>
-        <div className="flex h-24 items-center justify-center bg-secondary/30 px-4 border-t border-border/50 shrink-0">
-            <nav className="flex items-center gap-3 p-2 rounded-full bg-background/50 shadow-lg backdrop-blur-md border border-border/50">
+        <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 flex h-24 items-end justify-center pb-6 opacity-20 transition-opacity duration-300 hover:opacity-100">
+            <nav className="pointer-events-auto flex items-center gap-3 rounded-full border border-border/50 bg-background/50 p-2 shadow-lg backdrop-blur-md">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Link

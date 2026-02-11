@@ -12,8 +12,8 @@ interface ServerLayoutProps {
 
 export default function ServerLayout({ children, params }: ServerLayoutProps) {
     return (
-        <div vaul-drawer-wrapper="" className="h-screen w-full flex flex-col">
-            <div className="flex flex-1 overflow-hidden">
+        <div vaul-drawer-wrapper="" className="h-screen w-full">
+            <div className="flex h-full overflow-hidden">
                 <ChannelSidebar serverId={params.serverId} />
                 {children}
             </div>
