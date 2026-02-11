@@ -13,7 +13,7 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import ExploreServers from './ExploreServers';
-import DirectMessages from './DirectMessages';
+import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const servers = PlaceHolderImages.filter(img => img.id.startsWith('server-'));
@@ -39,31 +39,19 @@ export default function ServerRail() {
         <div className="group fixed inset-x-0 bottom-0 z-[60] flex h-24 items-end justify-center pointer-events-none">
             <nav className="mb-4 transform-gpu transition-all duration-300 ease-in-out opacity-0 translate-y-8 group-hover:opacity-100 group-hover:translate-y-0 pointer-events-auto">
                 <div className="flex items-center gap-3 bg-background/50 p-3 backdrop-blur-md rounded-full border border-border/50 shadow-lg">
-                    <Sheet>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <SheetTrigger asChild>
-                                    <button
-                                        className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground transition-all duration-300 ease-in-out hover:bg-primary"
-                                    >
-                                        <Home className="h-6 w-6" />
-                                    </button>
-                                </SheetTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                                <p>Direct Messages</p>
-                            </TooltipContent>
-                        </Tooltip>
-                        <SheetContent showCloseButton={false} side="top" className="h-screen w-screen p-0 border-none">
-                            <SheetHeader className="sr-only">
-                              <SheetTitle>Direct Messages</SheetTitle>
-                              <SheetDescription>
-                                A list of your direct messages and private conversations.
-                              </SheetDescription>
-                            </SheetHeader>
-                            <DirectMessages />
-                        </SheetContent>
-                    </Sheet>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Link
+                                href="/"
+                                className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all duration-300 ease-in-out"
+                            >
+                                <Home className="h-6 w-6" />
+                            </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p>Direct Messages</p>
+                        </TooltipContent>
+                    </Tooltip>
                     <div className="h-8 w-[2px] bg-border" />
                     <div className="flex gap-3 overflow-x-auto no-scrollbar max-w-[10.5rem]">
                         {servers.map((server) => (
