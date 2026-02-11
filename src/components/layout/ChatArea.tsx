@@ -28,6 +28,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+
 
 interface ChatAreaProps {
   serverId: string;
@@ -57,6 +66,9 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
     const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
     const [isSavingEdit, setIsSavingEdit] = useState(false);
+    const [isPinnedSheetOpen, setIsPinnedSheetOpen] = useState(false);
+
+    const pinnedMessages = messages?.filter(msg => msg.pinned) || [];
 
     const messageForm = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -169,7 +181,53 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
           <h2 className="ml-2 text-lg font-semibold">{activeChannel.name}</h2>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="icon"><Pin className="h-5 w-5" /></Button>
+            <Sheet open={isPinnedSheetOpen} onOpenChange={setIsPinnedSheetOpen}>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon"><Pin className="h-5 w-5" /></Button>
+                </SheetTrigger>
+                <SheetContent className="z-[103] flex flex-col">
+                    <SheetHeader>
+                        <SheetTitle>Pinned Messages in #{activeChannel.name}</SheetTitle>
+                        <SheetDescription>
+                            {pinnedMessages.length > 0 
+                                ? `There are ${pinnedMessages.length} pinned messages in this channel.`
+                                : "There are no pinned messages in this channel."
+                            }
+                        </SheetDescription>
+                    </SheetHeader>
+                    <ScrollArea className="flex-1 -mx-6">
+                        <div className="px-6 py-4 space-y-4">
+                            {pinnedMessages.length > 0 ? (
+                                pinnedMessages.map(msg => (
+                                    <div key={msg.id} className="p-3 rounded-lg border bg-card/50">
+                                        <div className="flex items-start gap-3">
+                                                <Avatar className="h-10 w-10">
+                                                <AvatarImage src={msg.authorPhotoURL} alt={msg.authorDisplayName} />
+                                                <AvatarFallback>{msg.authorDisplayName.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1">
+                                                    <div className="flex items-baseline gap-2">
+                                                    <p className="font-semibold text-primary">{msg.authorDisplayName}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {msg.createdAt ? format(msg.createdAt.toDate(), 'PP p') : null}
+                                                    </p>
+                                                </div>
+                                                <MessageRenderer content={msg.text} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-16">
+                                    <Pin className="h-12 w-12 mb-4" />
+                                    <h3 className="text-lg font-semibold">No Pinned Messages</h3>
+                                    <p className="text-sm">There are no pinned messages in this channel yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </SheetContent>
+            </Sheet>
           <Button variant="ghost" size="icon"><Users className="h-5 w-5" /></Button>
         </div>
       </header>
