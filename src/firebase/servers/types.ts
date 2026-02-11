@@ -9,6 +9,7 @@ export interface Server {
     inviteCode: string;
     createdAt: Timestamp;
     trialModeEnabled?: boolean;
+    acceptingInvites?: boolean;
 }
 
 export type ServerRole = 'owner' | 'admin' | 'user' | 'trial';

@@ -38,6 +38,7 @@ export async function createServer(firestore: Firestore, user: User, serverName:
         createdAt: serverTimestamp(),
         inviteCode: inviteCode,
         trialModeEnabled: false,
+        acceptingInvites: true,
     });
     
     // 2. Create the owner's member document
@@ -85,6 +86,11 @@ export async function joinServer(firestore: Firestore, user: User, inviteCode: s
     const serverDoc = querySnapshot.docs[0];
     const serverId = serverDoc.id;
     const serverData = serverDoc.data() as Server;
+
+    // Check if server is accepting invites
+    if (serverData.acceptingInvites === false) {
+        throw new Error("This server is not currently accepting new members.");
+    }
 
     // 2. Check if user is already a member
     const memberRef = doc(firestore, `servers/${serverId}/members/${user.uid}`);
@@ -297,4 +303,60 @@ export async function kickServerMember(firestore: Firestore, serverId: string, u
         errorEmitter.emit('permission-error', permissionError);
         throw serverError;
     });
+}
+
+export const updateServer = (
+    firestore: Firestore,
+    serverId: string,
+    updates: Partial<Server>
+) => {
+    const serverRef = doc(firestore, 'servers', serverId);
+    return updateDoc(serverRef, updates).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: serverRef.path,
+            operation: 'update',
+            requestResourceData: updates,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+};
+
+export async function deleteServer(firestore: Firestore, serverId: string) {
+    // This is a simplified deletion. In a production app, you would use a Cloud Function
+    // to recursively delete all subcollections (channels, messages, members).
+    // Here, we just delete the server doc, and security rules will prevent access
+    // to the orphaned subcollections.
+    const serverRef = doc(firestore, 'servers', serverId);
+    return deleteDoc(serverRef).catch(async (serverError) => {
+         const permissionError = new FirestorePermissionError({
+            path: serverRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+}
+
+export async function transferServerOwnership(
+    firestore: Firestore,
+    serverId: string,
+    oldOwnerId: string,
+    newOwnerId: string
+) {
+    const batch = writeBatch(firestore);
+
+    // 1. Update server ownerId
+    const serverRef = doc(firestore, 'servers', serverId);
+    batch.update(serverRef, { ownerId: newOwnerId });
+
+    // 2. Downgrade old owner to admin
+    const oldOwnerMemberRef = doc(firestore, `servers/${serverId}/members/${oldOwnerId}`);
+    batch.update(oldOwnerMemberRef, { role: 'admin' });
+
+    // 3. Promote new owner to owner
+    const newOwnerMemberRef = doc(firestore, `servers/${serverId}/members/${newOwnerId}`);
+    batch.update(newOwnerMemberRef, { role: 'owner' });
+    
+    return batch.commit();
 }

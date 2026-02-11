@@ -29,6 +29,10 @@ service cloud.firestore {
       return isServerRole(serverId, ['owner', 'admin', 'user']);
     }
 
+    function isServerOwner(serverId) {
+      return isServerRole(serverId, ['owner']);
+    }
+
     function isServerAdmin(serverId) {
       return isServerRole(serverId, ['owner', 'admin']);
     }
@@ -91,13 +95,13 @@ service cloud.firestore {
     match /servers/{serverId} {
       allow read: if isServerMember(serverId);
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow update: if isServerAdmin(serverId);
-      allow delete: if isServerRole(serverId, ['owner']);
+      allow update: if (isServerAdmin(serverId) && request.resource.data.ownerId == resource.data.ownerId) || request.auth.uid == resource.data.ownerId;
+      allow delete: if isServerOwner(serverId);
 
       match /members/{userId} {
         allow read: if isServerMember(serverId);
-        allow create: if request.auth.uid == userId || isServerAdmin(serverId);
-        allow update: if isServerAdmin(serverId);
+        allow create: if (request.auth.uid == userId && get(/databases/$(database)/documents/servers/$(serverId)).data.acceptingInvites == true) || isServerAdmin(serverId);
+        allow update: if isServerOwner(serverId) || (isServerAdmin(serverId) && resource.data.role != 'owner' && request.resource.data.role != 'owner');
         allow delete: if request.auth.uid == userId || isServerAdmin(serverId);
       }
 

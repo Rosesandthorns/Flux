@@ -63,6 +63,7 @@ import { Input } from '../ui/input';
 import { useMemo, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import EditChannelDialog from '../servers/EditChannelDialog';
+import ServerSettingsDialog from '../servers/ServerSettingsDialog';
 
 function VoiceChannelEntry({ serverId, channel, canManageServer }: { serverId: string, channel: any, canManageServer: boolean }) {
     const { activeVoiceChannel, joinChannel, speakingPeers } = useVoice();
@@ -137,8 +138,10 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showLeaveAlert, setShowLeaveAlert] = useState(false);
+  const [showOwnerLeaveAlert, setShowOwnerLeaveAlert] = useState(false);
 
-  const canManageServer = !memberLoading && (member?.role === 'owner' || member?.role === 'admin');
+  const isOwner = member?.role === 'owner';
+  const canManageServer = !memberLoading && (isOwner || member?.role === 'admin');
 
   const visibleChannels = useMemo(() => {
     if (!channels || memberLoading) return [];
@@ -171,7 +174,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   }
 
   const handleLeaveServer = async () => {
-    if (!firestore || !user) return;
+    if (!firestore || !user || isOwner) return;
     try {
       await leaveServer(firestore, serverId, user.uid);
       toast({
@@ -204,9 +207,15 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             {canManageServer && <DropdownMenuItem onSelect={() => setShowInviteDialog(true)}>Invite People</DropdownMenuItem>}
-            {canManageServer && <DropdownMenuItem>Server Settings</DropdownMenuItem>}
+            {canManageServer && (
+              <ServerSettingsDialog serverId={serverId}>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  Server Settings
+                </DropdownMenuItem>
+              </ServerSettingsDialog>
+            )}
             {canManageServer && <DropdownMenuSeparator />}
-            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onSelect={() => setShowLeaveAlert(true)}>
+            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onSelect={() => isOwner ? setShowOwnerLeaveAlert(true) : setShowLeaveAlert(true)}>
               Leave Server
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -416,6 +425,21 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
                   <AlertDialogAction onClick={handleLeaveServer} className={cn(buttonVariants({ variant: "destructive" }))}>
                       Leave Server
                   </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
+
+       {/* Owner Leave Server Alert */}
+      <AlertDialog open={showOwnerLeaveAlert} onOpenChange={setShowOwnerLeaveAlert}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>You are the Server Owner</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      You cannot leave a server you own. To leave, you must first transfer ownership to another member or delete the server.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Got it</AlertDialogCancel>
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>

@@ -196,6 +196,11 @@
           "type": "boolean",
           "description": "If true, new members will join with the 'trial' role.",
           "default": false
+        },
+        "acceptingInvites": {
+          "type": "boolean",
+          "description": "If false, new users cannot join via invite code.",
+          "default": true
         }
       },
       "required": ["name", "ownerId", "inviteCode", "createdAt"]
