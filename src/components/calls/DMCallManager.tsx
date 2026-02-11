@@ -3,7 +3,7 @@ import { useDMCall } from '@/context/DMCallContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Phone, PhoneOff, Mic, MicOff, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Card } from '../ui/card';
 import { useUser } from '@/firebase';
 import { usePathname } from 'next/navigation';
@@ -30,6 +30,56 @@ function CallUI() {
     const { currentCall, answerCall, declineCall, endCall, toggleMute, isMuted, remoteStream } = useDMCall();
     const [duration, setDuration] = useState(0);
     const { user } = useUser();
+
+    // --- DRAG LOGIC ---
+    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const dragStartPoint = useRef({ x: 0, y: 0 });
+
+    const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+        // Only allow dragging via the main mouse button on desktop
+        if (e.type === 'mousedown' && (e as React.MouseEvent).button !== 0) {
+            return;
+        }
+        e.stopPropagation();
+        setIsDragging(true);
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        dragStartPoint.current = {
+            x: clientX - offset.x,
+            y: clientY - offset.y,
+        };
+    }, [offset]);
+
+    const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
+        if (!isDragging) return;
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        setOffset({
+            x: clientX - dragStartPoint.current.x,
+            y: clientY - dragStartPoint.current.y,
+        });
+    }, [isDragging]);
+
+    const handleDragEnd = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    useEffect(() => {
+        if (isDragging) {
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchmove', handleDragMove);
+            document.addEventListener('touchend', handleDragEnd);
+        }
+        return () => {
+            document.removeEventListener('mousemove', handleDragMove);
+            document.removeEventListener('mouseup', handleDragEnd);
+            document.removeEventListener('touchmove', handleDragMove);
+            document.removeEventListener('touchend', handleDragEnd);
+        };
+    }, [isDragging, handleDragMove, handleDragEnd]);
+    // --- END DRAG LOGIC ---
     
     // Timer for active call
     useEffect(() => {
@@ -94,8 +144,15 @@ function CallUI() {
 
     if (currentCall.status === 'connected') {
         return (
-             <Card className="fixed bottom-4 right-4 w-80 p-4 z-[500] animate-in slide-in-from-bottom-10 shadow-2xl">
-                 <div className="flex items-center gap-3 mb-4">
+             <Card 
+                className="fixed bottom-4 right-4 w-80 p-4 z-[500] shadow-2xl touch-none"
+                style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
+            >
+                 <div 
+                    className={`flex items-center gap-3 mb-4 ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+                    onMouseDown={handleDragStart}
+                    onTouchStart={handleDragStart}
+                 >
                     <Avatar className="h-10 w-10">
                         <AvatarImage src={otherPartyProfile.photoURL} />
                         <AvatarFallback>{otherPartyProfile.displayName.charAt(0)}</AvatarFallback>
