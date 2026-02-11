@@ -313,19 +313,19 @@ export default function UserProfilePopover({
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
     if (!firestore || !userProfile || !canModerateProfile) return;
 
+    const { dirtyFields } = form.formState;
     const updates: { [key: string]: any } = {};
     let hasIdentityChanged = false;
 
-    if (values.displayName !== userProfile.displayName) {
+    if (dirtyFields.displayName) {
       updates.displayName = values.displayName;
       hasIdentityChanged = true;
     }
-    const newHandle = `${values.handle}@flux`;
-    if (newHandle !== userProfile.handle) {
-      updates.handle = newHandle;
+    if (dirtyFields.handle) {
+      updates.handle = `${values.handle}@flux`;
       hasIdentityChanged = true;
     }
-    if (values.photoURL !== userProfile.photoURL) {
+    if (dirtyFields.photoURL) {
       updates.photoURL = values.photoURL;
     }
 
