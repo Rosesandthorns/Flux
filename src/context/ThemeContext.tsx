@@ -18,6 +18,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const storedTheme = localStorage.getItem('theme') as Theme | null;
     if (storedTheme) {
       setThemeState(storedTheme);
+    } else {
+      document.documentElement.classList.add('dark');
     }
   }, []);
 
@@ -30,22 +32,33 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     const body = document.body;
 
-    // Reset classes
-    root.classList.remove('theme-void', 'theme-bright', 'theme-crimson', 'theme-jade');
+    // Clear all theme-related classes
+    root.classList.remove('dark', 'theme-void', 'theme-bright', 'theme-crimson', 'theme-jade');
     body.classList.remove('bg-gradient-to-b', 'from-red-600', 'to-red-900');
+    
+    // Add base class
     body.classList.add('bg-background');
 
-    // Apply new theme class
-    if (theme !== 'default') {
-      root.classList.add(`theme-${theme}`);
-    }
-    
-    // Handle Crimson gradient
-    if (theme === 'crimson') {
+    switch (theme) {
+      case 'void':
+        root.classList.add('dark', 'theme-void');
+        break;
+      case 'bright':
+        root.classList.add('theme-bright');
+        break;
+      case 'crimson':
+        root.classList.add('dark', 'theme-crimson');
         body.classList.remove('bg-background');
         body.classList.add('bg-gradient-to-b', 'from-red-600', 'to-red-900');
+        break;
+      case 'jade':
+        root.classList.add('theme-jade');
+        break;
+      case 'default':
+      default:
+        root.classList.add('dark');
+        break;
     }
-
   }, [theme]);
 
   return (
