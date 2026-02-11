@@ -69,17 +69,6 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
         setActiveVoiceChannel(channelName);
         setIsMuted(false);
         setIsDeafened(false);
-        
-        if (userProfile) {
-            const currentUser: Participant = {
-                id: 'current-user',
-                name: userProfile.displayName,
-                avatarUrl: userProfile.photoURL || '',
-            };
-            // Simulate joining with other users for demo purposes
-            const otherUsers = [...otherUsersSample].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 2);
-            setParticipants([currentUser, ...otherUsers]);
-        }
     } catch (error) {
         console.error("Error accessing microphone:", error);
         toast({
@@ -89,7 +78,20 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
         });
         leaveChannel(); // Ensure we are in a clean state
     }
-  }, [activeVoiceChannel, userProfile, toast, leaveChannel]);
+  }, [activeVoiceChannel, toast, leaveChannel]);
+  
+    useEffect(() => {
+        if (activeVoiceChannel && userProfile) {
+            const currentUser: Participant = {
+                id: 'current-user',
+                name: userProfile.displayName,
+                avatarUrl: userProfile.photoURL || '',
+            };
+            // Simulate joining with other users for demo purposes
+            const otherUsers = [...otherUsersSample].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 2);
+            setParticipants([currentUser, ...otherUsers]);
+        }
+  }, [activeVoiceChannel, userProfile]);
 
 
   const toggleMute = useCallback(() => {

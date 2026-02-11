@@ -232,31 +232,33 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             )}
           </div>
           {voiceChannels.map((channel) => (
-            <div key={channel.id} className="group relative flex items-center pr-2">
-              <button
-                onClick={() => joinChannel(channel.name)}
-                className={cn(
-                  'flex flex-1 items-center rounded-md py-1.5 pl-2 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
-                  activeVoiceChannel === channel.name &&
-                    'bg-accent text-accent-foreground'
-                )}
-              >
-                <Volume2 className="mr-2 h-4 w-4" />
-                <span>{channel.name}</span>
-              </button>
-               {canManageServer && (
-                <EditChannelDialog serverId={serverId} channel={channel}>
+            <div key={channel.id}>
+              <div className="group relative flex items-center pr-2">
+                <button
+                  onClick={() => joinChannel(channel.name)}
+                  className={cn(
+                    'flex flex-1 items-center rounded-md py-1.5 pl-2 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+                    activeVoiceChannel === channel.name &&
+                      'bg-accent text-accent-foreground'
+                  )}
+                >
+                  <Volume2 className="mr-2 h-4 w-4" />
+                  <span>{channel.name}</span>
+                </button>
+                {canManageServer && (
+                  <EditChannelDialog serverId={serverId} channel={channel}>
                     <Button
-                        variant="ghost"
-                        size="icon"
-                        className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
+                      variant="ghost"
+                      size="icon"
+                      className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
                     >
-                        <Settings className="h-4 w-4" />
+                      <Settings className="h-4 w-4" />
                     </Button>
-                </EditChannelDialog>
-              )}
+                  </EditChannelDialog>
+                )}
+              </div>
               {activeVoiceChannel === channel.name && (
-                <div className="pt-2 pl-4">
+                <div className="pt-2 pl-6">
                   <TooltipProvider>
                     <div className="flex flex-wrap gap-2">
                       {participants.map((p) => (
