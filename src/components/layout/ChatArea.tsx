@@ -36,6 +36,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import UserProfilePopover from '../UserProfilePopover';
 
 
 interface ChatAreaProps {
@@ -185,7 +186,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon"><Pin className="h-5 w-5" /></Button>
                 </SheetTrigger>
-                <SheetContent className="z-[103] flex flex-col">
+                <SheetContent className="z-[111] flex flex-col">
                     <SheetHeader>
                         <SheetTitle>Pinned Messages in #{activeChannel.name}</SheetTitle>
                         <SheetDescription>
@@ -269,7 +270,9 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                     <div className='flex-1'>
                         {showAuthor && (
                             <div className="flex items-baseline gap-2">
-                                <p className="font-semibold text-primary">{msg.authorDisplayName}</p>
+                                <UserProfilePopover userId={msg.authorId} serverId={serverId} currentUserMember={member}>
+                                    <p className="font-semibold text-primary cursor-pointer hover:underline">{msg.authorDisplayName}</p>
+                                </UserProfilePopover>
                                 <p className="text-xs text-muted-foreground">
                                     {msg.createdAt ? format(msg.createdAt.toDate(), 'PP p') : null}
                                 </p>

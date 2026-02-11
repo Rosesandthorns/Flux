@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import UserProfilePopover from '../UserProfilePopover';
 
 interface DMChatAreaProps {
     contact: FriendWithProfile;
@@ -182,7 +183,9 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                             <div className="flex-1">
                                 {showAuthor && (
                                     <div className="flex items-baseline gap-2">
-                                        <p className="font-semibold text-primary">{msg.authorDisplayName}</p>
+                                        <UserProfilePopover userId={msg.authorId}>
+                                            <p className="font-semibold text-primary cursor-pointer hover:underline">{msg.authorDisplayName}</p>
+                                        </UserProfilePopover>
                                         <p className="text-xs text-muted-foreground">
                                             {msg.createdAt ? format(msg.createdAt.toDate(), 'PP p') : null}
                                         </p>

@@ -18,7 +18,7 @@ import {
 import type { User } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import type { ServerMessagePayload, Server, Channel } from './types';
+import type { ServerMessagePayload, Server, Channel, ServerRole } from './types';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 
@@ -243,3 +243,22 @@ export async function leaveServer(firestore: Firestore, serverId: string, userId
         throw serverError;
     });
 }
+
+export const updateUserRole = (
+    firestore: Firestore,
+    serverId: string,
+    userId: string,
+    newRole: ServerRole
+) => {
+    const memberRef = doc(firestore, `servers/${serverId}/members/${userId}`);
+    const data = { role: newRole };
+    return updateDoc(memberRef, data).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: memberRef.path,
+            operation: 'update',
+            requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+};
