@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -206,7 +207,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {canManageServer && <DropdownMenuItem onSelect={() => setShowInviteDialog(true)}>Invite People</DropdownMenuItem>}
+            {canManageServer && <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setShowInviteDialog(true) }}>Invite People</DropdownMenuItem>}
             {canManageServer && (
               <ServerSettingsDialog serverId={serverId}>
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -445,4 +446,5 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
       </AlertDialog>
     </div>
   );
-}
+
+    
