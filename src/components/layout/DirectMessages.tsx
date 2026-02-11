@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from 'react';
 import { Search, Check, X, Clock, Ban, UserPlus, Signal, Users, Settings, Mic, Headphones } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import DMChatArea from './DMChatArea';
+
 
 // Use chat avatars as placeholder for DM contacts
-const dmContacts = PlaceHolderImages.filter(img => img.id.startsWith('chat-avatar-')).map((img, index) => ({
+const dmContactsData = PlaceHolderImages.filter(img => img.id.startsWith('chat-avatar-')).map((img, index) => ({
     id: img.id,
     name: ['Alice', 'Bob', 'Charlie'][index],
     avatarUrl: img.imageUrl,
@@ -27,7 +30,13 @@ const pendingRequests = [
 
 const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
 
+type Contact = typeof dmContactsData[0];
+
 export default function DirectMessages() {
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  
+  const dmContacts = dmContactsData;
+
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
       {/* Sidebar with conversations and friend management */}
@@ -91,14 +100,14 @@ export default function DirectMessages() {
                 <TabsContent value="online">
                     <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">Online — {dmContacts.filter(c => c.status === 'Online').length}</h2>
                     {dmContacts.filter(c => c.status === 'Online').map(contact => (
-                         <button key={contact.id} className="flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-accent">
+                         <button key={contact.id} onClick={() => setSelectedContact(contact)} className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}>
                             <Avatar className="h-10 w-10 relative">
                                 <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint={contact.avatarHint as string} />
                                 <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
                                 <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
                             </Avatar>
                             <div>
-                                <p className="font-semibold">{contact.name}</p>
+                                <p className="font-semibold text-foreground">{contact.name}</p>
                                 <p className="text-xs text-muted-foreground">{contact.status}</p>
                             </div>
                         </button>
@@ -107,7 +116,7 @@ export default function DirectMessages() {
                 <TabsContent value="all">
                      <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">All Friends — {dmContacts.length}</h2>
                     {dmContacts.map(contact => (
-                        <button key={contact.id} className="flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-accent">
+                        <button key={contact.id} onClick={() => setSelectedContact(contact)} className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}>
                             <Avatar className="h-10 w-10 relative">
                                 <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint={contact.avatarHint as string} />
                                 <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
@@ -116,7 +125,7 @@ export default function DirectMessages() {
                                 )}
                             </Avatar>
                             <div>
-                                <p className="font-semibold">{contact.name}</p>
+                                <p className="font-semibold text-foreground">{contact.name}</p>
                                 <p className="text-xs text-muted-foreground">{contact.status}</p>
                             </div>
                         </button>
@@ -192,12 +201,16 @@ export default function DirectMessages() {
       </div>
 
       {/* Main chat view */}
-      <div className="hidden md:flex flex-1 flex-col items-center justify-center p-6 bg-background">
-        <div className="text-center">
-            <div className="text-5xl text-muted-foreground mb-4">📨</div>
-          <h2 className="text-2xl font-semibold text-muted-foreground">Your Messages</h2>
-          <p className="mt-2 text-muted-foreground">Select a conversation to start chatting.</p>
-        </div>
+      <div className="hidden md:flex flex-1 flex-col bg-background">
+        {selectedContact ? <DMChatArea contact={selectedContact} /> : (
+            <div className="flex-1 flex items-center justify-center p-6">
+                <div className="text-center">
+                    <div className="text-5xl text-muted-foreground mb-4">📨</div>
+                    <h2 className="text-2xl font-semibold text-muted-foreground">Your Messages</h2>
+                    <p className="mt-2 text-muted-foreground">Select a conversation to start chatting.</p>
+                </div>
+            </div>
+        )}
       </div>
     </div>
   );
