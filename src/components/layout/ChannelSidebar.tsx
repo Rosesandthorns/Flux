@@ -5,6 +5,8 @@ import { ChevronDown, Hash, Mic, Settings, Volume2, Headphones } from 'lucide-re
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
+import SettingsPage from './SettingsPage';
 
 const textChannels = ['general', 'random', 'dev-talk', 'design-critique'];
 const voiceChannels = ['General', 'Gaming', 'Music'];
@@ -68,9 +70,22 @@ export default function ChannelSidebar() {
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <Headphones className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Settings className="h-4 w-4" />
-          </Button>
+           <Sheet>
+            <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Settings className="h-4 w-4" />
+                </Button>
+            </SheetTrigger>
+            <SheetContent showCloseButton={false} side="top" className="h-screen w-screen p-0 border-none">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Settings</SheetTitle>
+                  <SheetDescription>
+                    Manage your account and application settings.
+                  </SheetDescription>
+                </SheetHeader>
+                <SettingsPage />
+            </SheetContent>
+          </Sheet>
         </div>
       </footer>
     </div>

@@ -11,6 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import DMChatArea from './DMChatArea';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
+import SettingsPage from './SettingsPage';
 
 
 // Use chat avatars as placeholder for DM contacts
@@ -193,9 +195,22 @@ export default function DirectMessages() {
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                     <Headphones className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Settings className="h-4 w-4" />
-                </Button>
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Settings className="h-4 w-4" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent showCloseButton={false} side="top" className="h-screen w-screen p-0 border-none">
+                        <SheetHeader className="sr-only">
+                            <SheetTitle>Settings</SheetTitle>
+                            <SheetDescription>
+                            Manage your account and application settings.
+                            </SheetDescription>
+                        </SheetHeader>
+                        <SettingsPage />
+                    </SheetContent>
+                </Sheet>
             </div>
         </footer>
       </div>
