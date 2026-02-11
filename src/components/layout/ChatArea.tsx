@@ -300,15 +300,15 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                             <div className="space-y-2">
                                                 {trialMembers.map(m => (
                                                     <div key={m.id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
-                                                        <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
-                                                            <div className="flex items-center gap-3 cursor-pointer">
-                                                                <Avatar className="h-9 w-9">
-                                                                    <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
-                                                                    <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
-                                                                </Avatar>
-                                                                <p className="hover:underline">{m.userProfile.displayName}</p>
-                                                            </div>
-                                                        </UserProfilePopover>
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar className="h-9 w-9">
+                                                                <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
+                                                                <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                                            </Avatar>
+                                                            <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                                <p className="font-semibold hover:underline cursor-pointer">{m.userProfile.displayName}</p>
+                                                            </UserProfilePopover>
+                                                        </div>
                                                         {isUpdatingTrialMember === m.id ? (
                                                             <Loader2 className="h-5 w-5 animate-spin" />
                                                         ) : (
@@ -331,15 +331,13 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                             <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Admins — {adminMembers.length}</h3>
                                             <div className="space-y-2">
                                                 {adminMembers.map(m => (
-                                                    <div key={m.id} className="flex items-center p-2 rounded-md hover:bg-accent">
+                                                    <div key={m.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
+                                                        <Avatar className="h-9 w-9">
+                                                            <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
+                                                            <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                                        </Avatar>
                                                         <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
-                                                            <div className="flex items-center gap-3 cursor-pointer">
-                                                                <Avatar className="h-9 w-9">
-                                                                    <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
-                                                                    <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
-                                                                </Avatar>
-                                                                <p className="hover:underline">{m.userProfile.displayName}</p>
-                                                            </div>
+                                                            <p className="font-semibold hover:underline cursor-pointer">{m.userProfile.displayName}</p>
                                                         </UserProfilePopover>
                                                     </div>
                                                 ))}
@@ -351,15 +349,13 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                             <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Members — {regularMembers.length}</h3>
                                             <div className="space-y-2">
                                                 {regularMembers.map(m => (
-                                                    <div key={m.id} className="flex items-center p-2 rounded-md hover:bg-accent">
-                                                         <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
-                                                            <div className="flex items-center gap-3 cursor-pointer">
-                                                                <Avatar className="h-9 w-9">
-                                                                    <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
-                                                                    <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
-                                                                </Avatar>
-                                                                <p className="hover:underline">{m.userProfile.displayName}</p>
-                                                            </div>
+                                                     <div key={m.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
+                                                         <Avatar className="h-9 w-9">
+                                                            <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
+                                                            <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                                        </Avatar>
+                                                        <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                            <p className="font-semibold hover:underline cursor-pointer">{m.userProfile.displayName}</p>
                                                         </UserProfilePopover>
                                                     </div>
                                                 ))}
