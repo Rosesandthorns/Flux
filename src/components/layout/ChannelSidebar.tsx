@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { ChevronDown, Hash, Mic, Settings, Volume2, Headphones, Smile } from 'lucide-react';
+import { ChevronDown, Hash, Mic, Settings, Volume2, Headphones } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -67,9 +67,6 @@ export default function ChannelSidebar() {
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <Headphones className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Smile className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <Settings className="h-4 w-4" />
