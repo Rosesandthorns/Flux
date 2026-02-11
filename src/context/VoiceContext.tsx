@@ -39,6 +39,7 @@ interface VoiceContextType {
   participants: DisplayParticipant[];
   isMuted: boolean;
   isDeafened: boolean;
+  speakingPeers: Set<string>;
   joinChannel: (
     serverId: string,
     channelId: string,
@@ -62,21 +63,14 @@ const AudioPlayer = ({ stream }: { stream: MediaStream }) => {
 };
 
 export function VoiceProvider({ children }: { children: ReactNode }) {
-  const [
-    activeVoiceChannel,
-    setActiveVoiceChannel,
-  ] = useState<{ serverId: string; channelId: string; channelName: string } | null>(
-    null
-  );
-  const [firestoreParticipants, setFirestoreParticipants] = useState<
-    VoiceParticipant[]
-  >([]);
-  const [remoteStreams, setRemoteStreams] = useState<
-    Record<string, MediaStream>
-  >({});
+  const [activeVoiceChannel, setActiveVoiceChannel] =
+    useState<{ serverId: string; channelId: string; channelName: string } | null>(null);
+  const [firestoreParticipants, setFirestoreParticipants] = useState<VoiceParticipant[]>([]);
+  const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
   const [muteStateBeforeDeafen, setMuteStateBeforeDeafen] = useState(false);
+  const [speakingPeers, setSpeakingPeers] = useState<Set<string>>(new Set());
 
   const { user } = useUser();
   const { data: userProfile } = useUserProfile();
@@ -88,19 +82,82 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
   const connectionsRef = useRef<Record<string, MediaConnection>>({});
   const fsUnsubscribeRef = useRef<Unsubscribe | null>(null);
 
+  const analyserIntervals = useRef<Record<string, number>>({});
+  const audioContexts = useRef<Record<string, AudioContext>>({});
+
   const participants = useMemo(() => {
     return firestoreParticipants.map((p) => ({
       ...p,
       stream: remoteStreams[p.peerId],
     }));
   }, [firestoreParticipants, remoteStreams]);
-  
+
+  const stopSpeakingProcessor = useCallback((peerId: string) => {
+    if (analyserIntervals.current[peerId]) {
+      clearInterval(analyserIntervals.current[peerId]);
+      delete analyserIntervals.current[peerId];
+    }
+    if (audioContexts.current[peerId]) {
+      audioContexts.current[peerId].close().catch(console.error);
+      delete audioContexts.current[peerId];
+    }
+     setSpeakingPeers(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(peerId)) {
+            newSet.delete(peerId);
+            return newSet;
+        }
+        return prev;
+    });
+  }, []);
+
+  const processStreamForSpeaking = useCallback((stream: MediaStream, peerId: string) => {
+      if (analyserIntervals.current[peerId] || !stream.getAudioTracks().length) return;
+
+      const audioContext = new (window.AudioContext)();
+      audioContexts.current[peerId] = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      source.connect(analyser);
+
+      const intervalId = window.setInterval(() => {
+          analyser.getByteFrequencyData(dataArray);
+          const sum = dataArray.reduce((a, b) => a + b, 0);
+          const avg = sum / dataArray.length;
+
+          setSpeakingPeers(prev => {
+              const newSet = new Set(prev);
+              const isSpeaking = avg > 10;
+
+              if (isSpeaking) {
+                  if (!newSet.has(peerId)) {
+                      newSet.add(peerId);
+                      return newSet;
+                  }
+              } else {
+                  if (newSet.has(peerId)) {
+                      newSet.delete(peerId);
+                      return newSet;
+                  }
+              }
+              return prev;
+          });
+      }, 200);
+
+      analyserIntervals.current[peerId] = intervalId;
+  }, []);
+
+
   const cleanupResources = useCallback(() => {
     fsUnsubscribeRef.current?.();
     fsUnsubscribeRef.current = null;
 
     Object.values(connectionsRef.current).forEach((conn) => conn.close());
     connectionsRef.current = {};
+    
+    Object.keys(analyserIntervals.current).forEach(stopSpeakingProcessor);
 
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
@@ -120,7 +177,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       );
       deleteDoc(participantRef).catch(console.error);
     }
-  }, [firestore, user, activeVoiceChannel]);
+  }, [firestore, user, activeVoiceChannel, stopSpeakingProcessor]);
   
   const resetState = useCallback(() => {
     setActiveVoiceChannel(null);
@@ -135,26 +192,19 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
     resetState();
   }, [cleanupResources, resetState]);
 
-  // This ref pattern is crucial to prevent the useEffect below from re-running on every render,
-  // which was the cause of the join/leave bug.
   const cleanupRef = useRef(cleanup);
   useEffect(() => {
     cleanupRef.current = cleanup;
   });
 
   useEffect(() => {
-    // This effect now only triggers its cleanup when the component unmounts or the user logs out.
-    // It will not trigger on channel changes.
     const handleCleanup = () => cleanupRef.current();
-
-    // Add a beforeunload listener to clean up if the user closes the tab
     window.addEventListener('beforeunload', handleCleanup);
-
     return () => {
       handleCleanup();
       window.removeEventListener('beforeunload', handleCleanup);
     };
-  }, [user]); // The effect's behavior is tied to the user's session and component lifecycle.
+  }, [user]);
 
   const leaveChannel = useCallback(() => {
     cleanup();
@@ -165,7 +215,6 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       if (activeVoiceChannel?.channelId === channelId) return;
       if (!firestore || !user || !userProfile) return;
 
-      // Clean up resources from the PREVIOUS channel, but don't reset UI state yet.
       cleanupResources();
 
       try {
@@ -175,7 +224,6 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
         });
         localStreamRef.current = stream;
 
-        // Immediately update the UI to show the user is in the new channel
         setActiveVoiceChannel({ serverId, channelId, channelName });
 
         const { default: Peer } = await import('peerjs');
@@ -183,15 +231,11 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
         peerRef.current = newPeer;
 
         newPeer.on('open', (peerId) => {
-          const participantRef = doc(
-            firestore,
-            'servers',
-            serverId,
-            'channels',
-            channelId,
-            'participants',
-            user.uid
-          );
+          if (localStreamRef.current) {
+            processStreamForSpeaking(localStreamRef.current, peerId);
+          }
+          
+          const participantRef = doc(firestore, 'servers', serverId, 'channels', channelId, 'participants', user.uid);
           setDoc(participantRef, {
             userId: user.uid,
             peerId: peerId,
@@ -199,61 +243,36 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
             photoURL: userProfile.photoURL || '',
           });
 
-          const participantsCol = collection(
-            firestore,
-            'servers',
-            serverId,
-            'channels',
-            channelId,
-            'participants'
-          );
-          fsUnsubscribeRef.current = onSnapshot(
-            participantsCol,
-            (snapshot) => {
-              const currentParticipants = snapshot.docs.map(
-                (d) => d.data() as VoiceParticipant
-              );
+          const participantsCol = collection(firestore, 'servers', serverId, 'channels', channelId, 'participants');
+          fsUnsubscribeRef.current = onSnapshot(participantsCol, (snapshot) => {
+              const currentParticipants = snapshot.docs.map(d => d.data() as VoiceParticipant);
               setFirestoreParticipants(currentParticipants);
 
-              // Connect to new participants
               currentParticipants.forEach((p) => {
-                if (
-                  p.peerId !== peerId &&
-                  !connectionsRef.current[p.peerId] &&
-                  localStreamRef.current
-                ) {
+                if (p.peerId !== peerId && !connectionsRef.current[p.peerId] && localStreamRef.current) {
                   const call = newPeer.call(p.peerId, localStreamRef.current);
                   if (call) {
                     connectionsRef.current[p.peerId] = call;
                     call.on('stream', (remoteStream) => {
-                      setRemoteStreams((prev) => ({
-                        ...prev,
-                        [p.peerId]: remoteStream,
-                      }));
+                      setRemoteStreams((prev) => ({ ...prev, [p.peerId]: remoteStream }));
+                      processStreamForSpeaking(remoteStream, call.peer);
                     });
                     call.on('close', () => {
                       delete connectionsRef.current[p.peerId];
-                      setRemoteStreams((prev) => {
-                        const next = { ...prev };
-                        delete next[p.peerId];
-                        return next;
-                      });
+                      setRemoteStreams((prev) => { const next = { ...prev }; delete next[p.peerId]; return next; });
+                      stopSpeakingProcessor(p.peerId);
                     });
                   }
                 }
               });
               
-              // Clean up connections to participants who have left
               const currentPeerIds = new Set(currentParticipants.map(p => p.peerId));
               Object.keys(connectionsRef.current).forEach(connPeerId => {
                 if (!currentPeerIds.has(connPeerId)) {
                   connectionsRef.current[connPeerId]?.close();
                   delete connectionsRef.current[connPeerId];
-                   setRemoteStreams((prev) => {
-                        const next = { ...prev };
-                        delete next[connPeerId];
-                        return next;
-                      });
+                  setRemoteStreams((prev) => { const next = { ...prev }; delete next[connPeerId]; return next; });
+                  stopSpeakingProcessor(connPeerId);
                 }
               });
             }
@@ -265,43 +284,29 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
             call.answer(localStreamRef.current);
             connectionsRef.current[call.peer] = call;
             call.on('stream', (remoteStream) => {
-              setRemoteStreams((prev) => ({
-                ...prev,
-                [call.peer]: remoteStream,
-              }));
+              setRemoteStreams((prev) => ({...prev, [call.peer]: remoteStream }));
+              processStreamForSpeaking(remoteStream, call.peer);
             });
             call.on('close', () => {
               delete connectionsRef.current[call.peer];
-              setRemoteStreams((prev) => {
-                const next = { ...prev };
-                delete next[call.peer];
-                return next;
-              });
+              setRemoteStreams((prev) => { const next = { ...prev }; delete next[call.peer]; return next; });
+              stopSpeakingProcessor(call.peer);
             });
           }
         });
 
         newPeer.on('error', (err) => {
           console.error('PeerJS error:', err);
-          toast({
-            variant: 'destructive',
-            title: 'Connection Error',
-            description: 'Could not connect to the voice server.',
-          });
+          toast({ variant: 'destructive', title: 'Connection Error', description: 'Could not connect to the voice server.' });
           cleanup();
         });
       } catch (error) {
         console.error('Error accessing microphone:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Microphone Access Denied',
-          description:
-            'Please enable microphone permissions in your browser settings to join voice channels.',
-        });
+        toast({ variant: 'destructive', title: 'Microphone Access Denied', description: 'Please enable microphone permissions in your browser settings to join voice channels.' });
         cleanup();
       }
     },
-    [cleanupResources, firestore, user, userProfile, activeVoiceChannel, cleanup, toast]
+    [activeVoiceChannel, firestore, user, userProfile, cleanupResources, cleanup, toast, processStreamForSpeaking, stopSpeakingProcessor]
   );
 
   const toggleMute = useCallback(() => {
@@ -311,6 +316,13 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       track.enabled = !nextMuted;
     });
     setIsMuted(nextMuted);
+     if (nextMuted && peerRef.current?.id) {
+        setSpeakingPeers(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(peerRef.current!.id);
+            return newSet;
+        });
+    }
   }, [isMuted, isDeafened]);
 
   const toggleDeafen = useCallback(() => {
@@ -328,8 +340,6 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
           .getAudioTracks()
           .forEach((t) => (t.enabled = !muteStateBeforeDeafen));
     }
-    // This is a client-side deafen, we are not stopping remote streams from being received, just not playing them.
-    // A more robust solution would manage audio elements' muted property.
     const audioElements = document.querySelectorAll('#audio-container audio');
     audioElements.forEach((audio) => {
       (audio as HTMLAudioElement).muted = nextDeafened;
@@ -341,6 +351,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
     participants,
     isMuted,
     isDeafened,
+    speakingPeers,
     joinChannel,
     leaveChannel,
     toggleMute,

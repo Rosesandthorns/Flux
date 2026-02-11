@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, type Query, doc, onSnapshot, getDoc, type DocumentReference, limit } from 'firebase/firestore';
-import type { Server, Channel, ServerMember, ServerMessage } from './types';
+import type { Server, Channel, ServerMember, ServerMessage, VoiceParticipant } from './types';
 
 
 // Hook to get all servers a user is a member of
@@ -104,4 +104,20 @@ export function useServerMessages(serverId: string, channelId: string) {
   const messages = useMemo(() => data?.slice().reverse() ?? [], [data]);
 
   return { messages, loading, error };
+}
+
+// Hook to get participants in a voice channel
+export function useChannelParticipants(serverId: string, channelId: string | undefined) {
+    const firestore = useFirestore();
+
+    const participantsQuery = useMemo(() => {
+        if (!firestore || !serverId || !channelId) return null;
+        return collection(
+            firestore,
+            `servers/${serverId}/channels/${channelId}/participants`
+        ) as Query<VoiceParticipant>;
+    }, [firestore, serverId, channelId]);
+
+    const { data, loading, error } = useCollection<VoiceParticipant>(participantsQuery);
+    return { participants: data, loading, error };
 }

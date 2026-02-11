@@ -31,7 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useUserProfile, useServer, useServerChannels, useUser, useServerMember, useFirestore, leaveServer } from '@/firebase';
+import { useUserProfile, useServer, useServerChannels, useUser, useServerMember, useFirestore, leaveServer, useChannelParticipants } from '@/firebase';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import CreateChannelDialog from '../servers/CreateChannelDialog';
@@ -64,6 +64,65 @@ import { useMemo, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import EditChannelDialog from '../servers/EditChannelDialog';
 
+function VoiceChannelEntry({ serverId, channel, canManageServer }: { serverId: string, channel: any, canManageServer: boolean }) {
+    const { activeVoiceChannel, joinChannel, speakingPeers } = useVoice();
+    const { participants } = useChannelParticipants(serverId, channel.id);
+
+    return (
+        <div key={channel.id}>
+            <div className="group relative flex items-center pr-2">
+                <button
+                  onClick={() => joinChannel(serverId, channel.id!, channel.name)}
+                  className={cn(
+                    'flex flex-1 items-center rounded-md py-1.5 pl-2 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+                    activeVoiceChannel?.channelId === channel.id && 'bg-accent text-accent-foreground'
+                  )}
+                >
+                  <Volume2 className="mr-2 h-4 w-4" />
+                  <span>{channel.name}</span>
+                </button>
+                {canManageServer && (
+                    <EditChannelDialog serverId={serverId} channel={channel}>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
+                        >
+                            <Settings className="h-4 w-4" />
+                        </Button>
+                    </EditChannelDialog>
+                )}
+            </div>
+             {participants && participants.length > 0 && (
+                <div className="pt-2 pl-6">
+                  <TooltipProvider>
+                    <div className="flex flex-wrap gap-2">
+                      {participants.map((p) => (
+                        <Tooltip key={p.userId}>
+                          <TooltipTrigger>
+                            <Avatar
+                              className={cn(
+                                'h-8 w-8 ring-2 ring-offset-background ring-offset-2 transition-all ring-transparent',
+                                speakingPeers.has(p.peerId) && 'ring-green-500'
+                              )}
+                            >
+                              <AvatarImage src={p.photoURL} alt={p.displayName} />
+                              <AvatarFallback>{p.displayName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{p.displayName}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  </TooltipProvider>
+                </div>
+              )}
+        </div>
+    );
+}
+
 export default function ChannelSidebar({ serverId }: { serverId: string }) {
   const params = useParams();
   const router = useRouter();
@@ -92,10 +151,8 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
 
   const {
     activeVoiceChannel: vc,
-    participants,
     isMuted,
     isDeafened,
-    joinChannel,
     leaveChannel,
     toggleMute,
     toggleDeafen,
@@ -230,58 +287,8 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
               </TooltipProvider>
             )}
           </div>
-          {voiceChannels.map((channel) => (
-            <div key={channel.id}>
-              <div className="group relative flex items-center pr-2">
-                <button
-                  onClick={() => joinChannel(serverId, channel.id!, channel.name)}
-                  className={cn(
-                    'flex flex-1 items-center rounded-md py-1.5 pl-2 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
-                    vc?.channelId === channel.id &&
-                      'bg-accent text-accent-foreground'
-                  )}
-                >
-                  <Volume2 className="mr-2 h-4 w-4" />
-                  <span>{channel.name}</span>
-                </button>
-                {canManageServer && (
-                  <EditChannelDialog serverId={serverId} channel={channel}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
-                    >
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </EditChannelDialog>
-                )}
-              </div>
-              {vc?.channelId === channel.id && (
-                <div className="pt-2 pl-6">
-                  <TooltipProvider>
-                    <div className="flex flex-wrap gap-2">
-                      {participants.map((p) => (
-                        <Tooltip key={p.userId}>
-                          <TooltipTrigger>
-                            <Avatar
-                              className={cn(
-                                'h-8 w-8 ring-2 ring-offset-background ring-offset-2 transition-all ring-transparent'
-                              )}
-                            >
-                              <AvatarImage src={p.photoURL} alt={p.displayName} />
-                              <AvatarFallback>{p.displayName.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{p.displayName}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
-                    </div>
-                  </TooltipProvider>
-                </div>
-              )}
-            </div>
+           {voiceChannels.map((channel) => (
+              <VoiceChannelEntry key={channel.id} serverId={serverId} channel={channel} canManageServer={canManageServer} />
           ))}
         </div>
         {textChannels.length === 0 &&
