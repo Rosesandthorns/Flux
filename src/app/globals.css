@@ -78,7 +78,7 @@ body {
   }
 
   /* Void Theme */
-  .theme-void {
+  .dark.theme-void {
     --background: 240 10% 3.9%; /* Midnight black */
     --foreground: 210 40% 98%;
     --card: 240 5.9% 10%;
@@ -124,7 +124,7 @@ body {
   }
 
   /* Crimson Theme */
-  .theme-crimson {
+  .dark.theme-crimson {
     --background: 347 72% 23%; /* Deep red crimson */
     --foreground: 0 0% 98%;
     --card: 347 60% 18%;
@@ -191,5 +191,3 @@ body {
     scrollbar-width: none;
   }
 }
-
-    
