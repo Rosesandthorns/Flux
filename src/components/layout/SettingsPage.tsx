@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useTheme, type Theme } from "@/context/ThemeContext";
 
 const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
 
@@ -33,8 +34,8 @@ const themes = [
 ];
 
 export default function SettingsPage() {
-    const [activeCategory, setActiveCategory] = useState<SettingsCategory>("My Account");
-    const [selectedTheme, setSelectedTheme] = useState("default");
+    const [activeCategory, setActiveCategory] = useState<SettingsCategory>("Profiles");
+    const { theme: selectedTheme, setTheme: setSelectedTheme } = useTheme();
 
     const renderContent = () => {
         switch (activeCategory) {
@@ -73,7 +74,7 @@ export default function SettingsPage() {
                             </CardHeader>
                             <CardContent className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                                 {themes.map(theme => (
-                                    <div key={theme.id} onClick={() => setSelectedTheme(theme.id)} className="cursor-pointer">
+                                    <div key={theme.id} onClick={() => setSelectedTheme(theme.id as Theme)} className="cursor-pointer">
                                         <div className={`relative overflow-hidden rounded-lg border-2 ${selectedTheme === theme.id ? 'border-primary' : 'border-border'}`}>
                                             <div className="p-4 space-y-2">
                                                 <div className="flex gap-2">
@@ -249,5 +250,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-    
