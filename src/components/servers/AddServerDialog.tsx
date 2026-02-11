@@ -123,7 +123,7 @@ export default function AddServerDialog({ children }: { children: React.ReactNod
         <Sheet open={open} onOpenChange={setOpen}>
             {children}
             <SheetContent side="top" className="h-screen w-screen p-0 flex flex-col bg-background/95 backdrop-blur-sm border-none">
-                <SheetHeader className="text-center pt-12 pb-6 shrink-0">
+                <SheetHeader className="pt-12 pb-6 shrink-0 px-4 md:px-8 text-center md:text-left">
                     <SheetTitle className="text-3xl">Add a Server</SheetTitle>
                     <SheetDescription className="text-base">
                         Create a new community or join an existing one.
@@ -131,7 +131,7 @@ export default function AddServerDialog({ children }: { children: React.ReactNod
                 </SheetHeader>
 
                 {/* Mobile view with Tabs */}
-                <div className="md:hidden flex-1 flex flex-col p-4 pt-0">
+                <div className="md:hidden flex-1 flex flex-col p-4">
                     <Tabs defaultValue="create" className="w-full h-full flex flex-col">
                         <TabsList className="grid w-full grid-cols-2 mx-auto max-w-sm">
                             <TabsTrigger value="create">Create</TabsTrigger>
@@ -159,7 +159,7 @@ export default function AddServerDialog({ children }: { children: React.ReactNod
                 </div>
 
                 {/* Desktop view with 2 columns */}
-                <div className="hidden md:flex flex-1 items-center justify-center gap-8">
+                <div className="hidden md:flex flex-1 items-center justify-center gap-8 px-8">
                     <Card className="w-full max-w-lg transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-2xl bg-secondary/50">
                         <CardHeader className="text-center p-8">
                              <div className="mx-auto bg-primary/10 rounded-full p-4 w-fit mb-4">
