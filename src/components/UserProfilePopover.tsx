@@ -413,7 +413,7 @@ export default function UserProfilePopover({
       </SheetTrigger>
       <SheetContent
         side="top"
-        className="h-screen w-screen p-0 border-none bg-background/80 backdrop-blur-sm z-[150]"
+        className="h-screen w-screen p-0 border-none bg-background/80 backdrop-blur-sm"
         onPointerDownOutside={(e) => {
           const target = e.target as HTMLElement;
           if (
