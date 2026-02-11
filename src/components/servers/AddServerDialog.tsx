@@ -7,7 +7,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +82,7 @@ export default function AddServerDialog({ children }: { children: React.ReactNod
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>{children}</DialogTrigger>
+            {children}
             <DialogContent className="sm:max-w-[425px]">
                 <Tabs defaultValue="create" className="w-full">
                     <DialogHeader className="items-center">
