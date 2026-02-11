@@ -55,10 +55,24 @@ export function DMCallProvider({ children }: { children: ReactNode }) {
     const currentCallRef = useRef(currentCall); // Ref to avoid stale state in callbacks
     const mediaConnectionRef = useRef<MediaConnection | null>(null);
     const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const silentAudioRef = useRef<HTMLAudioElement>(null);
 
     useEffect(() => {
         currentCallRef.current = currentCall;
     }, [currentCall]);
+
+    // This effect will try to keep the audio context alive on mobile
+    useEffect(() => {
+        if (currentCall?.status === 'connected') {
+            // Play a silent audio track to keep the service worker alive on mobile
+            silentAudioRef.current?.play().catch(() => {
+                // Autoplay is often blocked, but we try anyway.
+                // The user interacting with the call buttons should allow this to play.
+            });
+        } else {
+            silentAudioRef.current?.pause();
+        }
+    }, [currentCall?.status]);
 
     const cleanupCall = useCallback(() => {
         if (callTimeoutRef.current) {
@@ -246,6 +260,7 @@ export function DMCallProvider({ children }: { children: ReactNode }) {
     return (
         <DMCallContext.Provider value={value}>
             {children}
+            <audio ref={silentAudioRef} loop src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
         </DMCallContext.Provider>
     );
 }

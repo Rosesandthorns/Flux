@@ -84,6 +84,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
 
   const analyserIntervals = useRef<Record<string, number>>({});
   const audioContexts = useRef<Record<string, AudioContext>>({});
+  const silentAudioRef = useRef<HTMLAudioElement>(null);
 
   const participants = useMemo(() => {
     return firestoreParticipants.map((p) => ({
@@ -91,6 +92,16 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       stream: remoteStreams[p.peerId],
     }));
   }, [firestoreParticipants, remoteStreams]);
+
+  useEffect(() => {
+    if (activeVoiceChannel) {
+        silentAudioRef.current?.play().catch(() => {
+            // Autoplay is often blocked, try anyway.
+        });
+    } else {
+        silentAudioRef.current?.pause();
+    }
+  }, [activeVoiceChannel]);
 
   const stopSpeakingProcessor = useCallback((peerId: string) => {
     if (analyserIntervals.current[peerId]) {
@@ -365,6 +376,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
         {Object.values(remoteStreams).map((stream, index) => (
           <AudioPlayer key={index} stream={stream} />
         ))}
+        <audio ref={silentAudioRef} loop src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
       </div>
     </VoiceContext.Provider>
   );
