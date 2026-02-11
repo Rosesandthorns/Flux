@@ -232,7 +232,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon"><Pin className="h-5 w-5" /></Button>
                 </SheetTrigger>
-                <SheetContent className="z-[111] flex flex-col">
+                <SheetContent className="flex flex-col">
                     <SheetHeader>
                         <SheetTitle>Pinned Messages in #{activeChannel.name}</SheetTitle>
                         <SheetDescription>
@@ -281,12 +281,6 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                 </SheetTrigger>
                 <SheetContent 
                     className="flex flex-col"
-                    onPointerDownOutside={(e) => {
-                        const target = e.target as HTMLElement;
-                        if (target.closest('[data-radix-popover-content]') || target.closest('[data-radix-select-content]')) {
-                            e.preventDefault();
-                        }
-                    }}
                 >
                     <SheetHeader>
                         <SheetTitle>Server Members</SheetTitle>
@@ -530,5 +524,6 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
 }
 
     
+
 
 
