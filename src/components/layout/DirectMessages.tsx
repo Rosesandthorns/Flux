@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Check, X, Clock, Ban, UserPlus } from 'lucide-react';
+import { Search, Check, X, Clock, Ban, UserPlus, Signal, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Use chat avatars as placeholder for DM contacts
 const dmContacts = PlaceHolderImages.filter(img => img.id.startsWith('chat-avatar-')).map((img, index) => ({
@@ -38,23 +39,51 @@ export default function DirectMessages() {
         </div>
 
         <Tabs defaultValue="all" className="flex-1 flex flex-col overflow-hidden px-4">
-            <TabsList className="flex w-full items-center justify-start gap-1 bg-transparent p-0 h-auto">
-                <TabsTrigger value="online" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground">Online</TabsTrigger>
-                <TabsTrigger value="all" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground">All</TabsTrigger>
-                <TabsTrigger value="pending" className="relative data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground">
-                    <Clock className="h-5 w-5 md:hidden" />
-                    <span className="hidden md:inline">Pending</span>
-                    {pendingRequests.length > 0 && <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 justify-center p-0 text-xs">{pendingRequests.length}</Badge>}
-                </TabsTrigger>
-                <TabsTrigger value="blocked" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground">
-                    <Ban className="h-5 w-5 md:hidden" />
-                    <span className="hidden md:inline">Blocked</span>
-                </TabsTrigger>
-                <TabsTrigger value="add" className="text-green-500 data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-md font-semibold">
-                    <UserPlus className="h-5 w-5 md:hidden" />
-                    <span className="hidden md:inline">Add Friend</span>
-                </TabsTrigger>
-            </TabsList>
+            <TooltipProvider>
+                <TabsList className="flex items-center gap-3 bg-transparent p-0 h-auto">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="online" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground p-2">
+                                <Signal className="h-5 w-5" />
+                            </TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Online</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="all" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground p-2">
+                                <Users className="h-5 w-5" />
+                            </TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent><p>All Friends</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                             <TabsTrigger value="pending" className="relative data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground p-2">
+                                <Clock className="h-5 w-5" />
+                                {pendingRequests.length > 0 && <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 justify-center p-0 text-xs">{pendingRequests.length}</Badge>}
+                            </TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Pending</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="blocked" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground p-2">
+                                <Ban className="h-5 w-5" />
+                            </TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Blocked</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                             <TabsTrigger value="add" className="text-green-500 data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-md font-semibold p-2">
+                                <UserPlus className="h-5 w-5" />
+                            </TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Add Friend</p></TooltipContent>
+                    </Tooltip>
+                </TabsList>
+            </TooltipProvider>
             <Separator className="my-3 bg-border/50" />
 
             <div className="flex-1 overflow-y-auto pr-2 -mr-2">
