@@ -210,15 +210,16 @@ export default function UserProfilePopover({ children, userId, serverId, current
     return (
         <Popover modal={true}>
             <PopoverTrigger asChild>{children}</PopoverTrigger>
-            <PopoverContent className="w-80 p-0"
-             onPointerDownOutside={(e) => {
+            <PopoverContent 
+                className="w-80 p-0 max-h-[80vh]"
+                onPointerDownOutside={(e) => {
                   const target = e.target as HTMLElement;
                   if (target.closest('[data-radix-dialog-content]') || target.closest('[data-radix-select-content]')) {
                       e.preventDefault();
                   }
-              }}
+                }}
             >
-                <ScrollArea className="max-h-[80vh]">
+                <ScrollArea className="h-full w-full">
                     {profileLoading || (serverId && memberLoading) ? (
                         <div className="p-4 space-y-2">
                             <Skeleton className="h-20 w-20 rounded-full" />
