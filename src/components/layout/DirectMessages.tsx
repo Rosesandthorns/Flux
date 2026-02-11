@@ -91,7 +91,7 @@ export default function DirectMessages() {
   const onlineContacts = friends?.filter((c) => c.userProfile.status === 'Online') || [];
 
   return (
-    <div className="flex h-full w-full bg-background text-foreground overflow-hidden pb-16 md:pb-0">
+    <div className="flex h-full w-full bg-background text-foreground pb-16 md:pb-0">
       <div className={cn(
         "relative z-[102] w-full flex-shrink-0 border-r border-border/50 bg-secondary/30 flex flex-col md:w-80",
         isMobile && selectedContact && "hidden"

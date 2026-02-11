@@ -21,7 +21,7 @@ export default function ServerLayout({ children, params: paramsProp }: ServerLay
 
     return (
         <div className="h-screen w-full">
-            <div className="flex h-full overflow-hidden">
+            <div className="flex h-full">
                 {/* Channel Sidebar (Master View) */}
                 <div className={cn(
                     "h-full",
@@ -33,7 +33,7 @@ export default function ServerLayout({ children, params: paramsProp }: ServerLay
                 
                 {/* Chat Area (Detail View) */}
                 <div className={cn(
-                    "flex-1 flex flex-col bg-background",
+                    "flex-1 flex flex-col bg-background pb-16 md:pb-0",
                     isMobile && !hasChannelSelected && "hidden"
                 )}>
                     {children}
