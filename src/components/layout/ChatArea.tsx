@@ -171,8 +171,9 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
         )
     }
 
-    const isAdmin = member?.role === 'owner' || member?.role === 'admin';
-    const canWrite = isAdmin || activeChannel.userAccess === 'readwrite';
+    const isServerAdmin = member?.role === 'owner' || member?.role === 'admin';
+    const isGlobalAdmin = userProfile?.status === 'owner' || userProfile?.status === 'admin';
+    const canWrite = isServerAdmin || activeChannel.userAccess === 'readwrite';
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -246,8 +247,8 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
               
               const isAuthor = msg.authorId === user?.uid;
               const canEdit = isAuthor;
-              const canDelete = isAuthor || isAdmin;
-              const canPin = isAdmin;
+              const canDelete = isAuthor || isServerAdmin || isGlobalAdmin;
+              const canPin = isServerAdmin || isGlobalAdmin;
 
               return (
                  <div key={msg.id} className={cn("group relative flex items-start gap-3 py-1", showAuthor && 'mt-3')}>

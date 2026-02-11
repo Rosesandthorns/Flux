@@ -10,6 +10,7 @@ import { useCollection } from './firestore/use-collection';
 import { useDoc } from './firestore/use-doc';
 import { useUserProfile } from './auth/use-user-profile';
 import { updateUserSettings } from './auth/settings';
+import { deleteUserDocument } from './auth/users';
 import { sendFriendRequest, acceptFriendRequest, declineOrCancelFriendRequest } from './friends/actions';
 import { useFriends, useFriendRequests } from './friends/hooks';
 import { useMessages } from './messages/hooks';
@@ -73,5 +74,6 @@ export {
   togglePinServerMessage,
   useChannelParticipants,
   updateUserRole,
+  deleteUserDocument,
 };
 export type { Message };

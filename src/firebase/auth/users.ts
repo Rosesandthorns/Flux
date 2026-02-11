@@ -1,5 +1,5 @@
 'use client';
-import { doc, setDoc, serverTimestamp, type Firestore } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, type Firestore, deleteDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Theme } from '@/context/ThemeContext';
@@ -12,7 +12,7 @@ export type UserProfile = {
     photoURL?: string;
     createdAt: any;
     profileLastUpdatedAt: any;
-    status: string;
+    status: 'owner' | 'admin' | 'user';
     theme: Theme;
     privacy: {
         whoCanDm: 'anyone' | 'friends';
@@ -52,6 +52,20 @@ export const createUserProfile = (firestore: Firestore, userId: string, email: s
             path: userRef.path,
             operation: 'create',
             requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+};
+
+export const deleteUserDocument = (firestore: Firestore, userId: string) => {
+    const userRef = doc(firestore, 'users', userId);
+    // This performs a "soft delete" by removing the user's profile document.
+    // It does NOT delete their Firebase Auth record.
+    return deleteDoc(userRef).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
         throw serverError;

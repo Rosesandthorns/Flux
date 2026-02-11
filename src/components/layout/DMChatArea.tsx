@@ -136,6 +136,8 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
         }
     }, [messages, user?.uid]);
 
+    const isGlobalAdmin = userProfile?.status === 'owner' || userProfile?.status === 'admin';
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <header className="hidden h-12 shrink-0 items-center border-b border-border/50 px-4 md:flex">
@@ -162,14 +164,17 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                     const prevMessage = index > 0 ? messages[index - 1] : null;
                     const showAuthor = !prevMessage || prevMessage.authorId !== msg.authorId;
                     const isAuthor = msg.authorId === user?.uid;
+
+                    const canEdit = isAuthor;
+                    const canDelete = isAuthor || isGlobalAdmin;
                     
                     return (
                         <div key={msg.id} className={cn("group relative flex items-start gap-3 py-1", showAuthor && 'mt-3')}>
                             {/* Message Toolbar */}
-                            {isAuthor && (
+                            {(canEdit || canDelete) && (
                                 <div className="absolute top-0 right-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-card border rounded-md shadow-sm z-10">
-                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEditing(msg)}><Pencil className="h-4 w-4"/></Button>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => startDeleting(msg)}><Trash2 className="h-4 w-4"/></Button>
+                                    {canEdit && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEditing(msg)}><Pencil className="h-4 w-4"/></Button>}
+                                    {canDelete && <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => startDeleting(msg)}><Trash2 className="h-4 w-4"/></Button>}
                                 </div>
                             )}
                             <div className="w-10">

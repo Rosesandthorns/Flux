@@ -33,7 +33,8 @@
         },
         "status": {
           "type": "string",
-          "description": "The user's status or role.",
+          "description": "The user's global status or role in the application.",
+          "enum": ["owner", "admin", "user"],
           "default": "user"
         },
         "theme": {
