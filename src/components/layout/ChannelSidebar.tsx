@@ -219,22 +219,15 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
               Text Channels
             </h2>
             {canManageServer && (
-              <TooltipProvider>
-                <CreateChannelDialog serverId={serverId} channelType="text">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          >
-                          <Plus className="h-4 w-4" />
-                          </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Create Channel</TooltipContent>
-                    </Tooltip>
-                </CreateChannelDialog>
-              </TooltipProvider>
+              <CreateChannelDialog serverId={serverId} channelType="text">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </CreateChannelDialog>
             )}
           </div>
           {textChannels.map((channel) => (
@@ -269,22 +262,15 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
               Voice Channels
             </h2>
             {canManageServer && (
-              <TooltipProvider>
-                <CreateChannelDialog serverId={serverId} channelType="voice">
-                  <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          >
-                          <Plus className="h-4 w-4" />
-                          </Button>
-                      </TooltipTrigger>
-                    <TooltipContent>Create Channel</TooltipContent>
-                  </Tooltip>
-                </CreateChannelDialog>
-              </TooltipProvider>
+              <CreateChannelDialog serverId={serverId} channelType="voice">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </CreateChannelDialog>
             )}
           </div>
            {voiceChannels.map((channel) => (
