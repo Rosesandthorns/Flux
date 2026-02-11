@@ -1,6 +1,6 @@
 'use client';
 
-import { Hash, Pin, Users, Paperclip, Smile, Send, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Hash, Pin, Users, Paperclip, Smile, Send, Pencil, Trash2, Check, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -48,6 +48,8 @@ import {
 } from '@/components/ui/dialog';
 import EmojiPicker from '../EmojiPicker';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 interface ChatAreaProps {
@@ -73,6 +75,8 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
     const firestore = useFirestore();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
+    const router = useRouter();
+    const isMobile = useIsMobile();
 
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
@@ -278,7 +282,12 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <header className="hidden h-12 shrink-0 items-center border-b border-border/50 px-4 md:flex">
+      <header className="flex h-12 shrink-0 items-center border-b border-border/50 px-2 md:px-4">
+        {isMobile && (
+            <Button variant="ghost" size="icon" className="mr-2" onClick={() => router.push(`/channels/${serverId}`)}>
+                <ArrowLeft className="h-5 w-5" />
+            </Button>
+        )}
         <div className="flex items-center">
           <Hash className="h-6 w-6 text-muted-foreground" />
           <h2 className="ml-2 text-lg font-semibold">{activeChannel.name}</h2>
