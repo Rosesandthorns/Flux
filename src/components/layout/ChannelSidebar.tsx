@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { ChevronDown, Hash, Mic, Settings, Volume2, Headphones, MicOff, X } from 'lucide-react';
+import { ChevronDown, Hash, Mic, Settings, Volume2, Headphones, MicOff, X, Plus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
@@ -9,13 +9,20 @@ import SettingsPage from './SettingsPage';
 import { useVoice } from '@/context/VoiceContext';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useUserProfile } from '@/firebase';
+import { useUserProfile, useServer, useServerChannels } from '@/firebase';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
-const textChannels: string[] = [];
-const voiceChannels: string[] = [];
+export default function ChannelSidebar({ serverId }: { serverId: string }) {
+  const params = useParams();
+  const { channelId } = params;
+  
+  const { data: server, loading: serverLoading } = useServer(serverId);
+  const { channels, loading: channelsLoading } = useServerChannels(serverId);
 
-export default function ChannelSidebar() {
-  const [activeChannel, setActiveChannel] = useState('general');
+  const textChannels = channels?.filter(c => c.type === 'text') || [];
+  const voiceChannels = channels?.filter(c => c.type === 'voice') || [];
+  
   const {
     activeVoiceChannel,
     participants,
@@ -32,75 +39,96 @@ export default function ChannelSidebar() {
   const effectiveMute = isMuted || isDeafened;
 
   return (
-    <div className="flex h-full w-64 flex-col bg-secondary/30 backdrop-blur-xl">
+    <div className="flex h-full w-64 flex-col bg-secondary/30 backdrop-blur-xl shrink-0">
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-border/50 px-4 shadow-sm">
-        <h1 className="text-lg font-bold tracking-tight text-primary">Flux</h1>
+        <h1 className="text-lg font-bold tracking-tight text-primary">{server?.name || 'Server'}</h1>
         <Button variant="ghost" size="icon" className="h-7 w-7">
           <ChevronDown className="h-4 w-4" />
         </Button>
       </header>
       <div className="flex-1 overflow-y-auto p-2">
-        {textChannels.length > 0 && (
-          <div className="space-y-1">
-            <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground">Text Channels</h2>
-            {textChannels.map((channel) => (
-              <button
-                key={channel}
-                onClick={() => setActiveChannel(channel)}
-                className={`flex w-full items-center rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground ${
-                  activeChannel === channel ? 'bg-accent text-accent-foreground' : ''
-                }`}
-              >
-                <Hash className="mr-2 h-4 w-4" />
-                <span>{channel}</span>
-              </button>
-            ))}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center px-2">
+            <h2 className="text-xs font-bold uppercase text-muted-foreground">Text Channels</h2>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Create Channel</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
           </div>
-        )}
-        {voiceChannels.length > 0 && (
-          <div className="mt-4 space-y-1">
-            <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground">Voice Channels</h2>
-            {voiceChannels.map((channel) => (
-              <div key={channel}>
-                <button
-                  onClick={() => joinChannel(channel)}
-                  className={cn(
-                    "flex w-full items-center rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
-                    activeVoiceChannel === channel && "bg-accent text-accent-foreground"
-                  )}
-                >
-                  <Volume2 className="mr-2 h-4 w-4" />
-                  <span>{channel}</span>
-                </button>
-                {activeVoiceChannel === channel && (
-                  <div className="pt-2 pl-4">
-                    <TooltipProvider>
-                      <div className="flex flex-wrap gap-2">
-                        {participants.map((p) => (
-                          <Tooltip key={p.id}>
-                            <TooltipTrigger>
-                              <Avatar className={cn(
-                                  'h-8 w-8 ring-2 ring-offset-background ring-offset-2 transition-all',
-                                  speakingParticipantId === p.id && !isDeafened ? 'ring-primary' : 'ring-transparent'
-                              )}>
-                                <AvatarImage src={p.avatarUrl} alt={p.name} />
-                                <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{p.name}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </TooltipProvider>
-                  </div>
+          {textChannels.map((channel) => (
+            <Link
+                key={channel.id}
+                href={`/channels/${serverId}/${channel.id}`}
+                className={cn(
+                    'flex w-full items-center rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+                    channelId === channel.id ? 'bg-accent text-accent-foreground' : ''
                 )}
-              </div>
-            ))}
+            >
+                <Hash className="mr-2 h-4 w-4" />
+                <span>{channel.name}</span>
+            </Link>
+          ))}
+        </div>
+        <div className="mt-4 space-y-1">
+          <div className="flex justify-between items-center px-2">
+            <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground">Voice Channels</h2>
+             <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Create Channel</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
           </div>
-        )}
-         {(textChannels.length === 0 && voiceChannels.length === 0) && (
+          {voiceChannels.map((channel) => (
+            <div key={channel.id}>
+              <button
+                onClick={() => joinChannel(channel.name)}
+                className={cn(
+                  "flex w-full items-center rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+                  activeVoiceChannel === channel.name && "bg-accent text-accent-foreground"
+                )}
+              >
+                <Volume2 className="mr-2 h-4 w-4" />
+                <span>{channel.name}</span>
+              </button>
+              {activeVoiceChannel === channel.name && (
+                <div className="pt-2 pl-4">
+                  <TooltipProvider>
+                    <div className="flex flex-wrap gap-2">
+                      {participants.map((p) => (
+                        <Tooltip key={p.id}>
+                          <TooltipTrigger>
+                            <Avatar className={cn(
+                                'h-8 w-8 ring-2 ring-offset-background ring-offset-2 transition-all',
+                                speakingParticipantId === p.id && !isDeafened ? 'ring-primary' : 'ring-transparent'
+                            )}>
+                              <AvatarImage src={p.avatarUrl} alt={p.name} />
+                              <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{p.name}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  </TooltipProvider>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+         {(textChannels.length === 0 && voiceChannels.length === 0) && !channelsLoading && (
             <div className="text-center text-muted-foreground p-8">
                 No channels here.
             </div>

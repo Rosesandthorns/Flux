@@ -160,6 +160,104 @@
         "createdAt",
         "conversationId"
       ]
+    },
+    "server": {
+      "title": "Server",
+      "description": "Represents a server/community in the application.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the server."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The UID of the user who owns the server."
+        },
+        "iconURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "The URL of the server's icon."
+        },
+        "inviteCode": {
+          "type": "string",
+          "description": "A unique, short code to join the server."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the server was created."
+        }
+      },
+      "required": ["name", "ownerId", "inviteCode", "createdAt"]
+    },
+    "serverMember": {
+      "title": "Server Member",
+      "description": "Represents a user's membership and role within a server.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["owner", "admin", "user"],
+          "description": "The role of the user in the server."
+        },
+        "joinedAt": {
+          "type": "string",
+          "description": "The timestamp when the user joined the server."
+        }
+      },
+      "required": ["role", "joinedAt"]
+    },
+    "channel": {
+      "title": "Channel",
+      "description": "A text or voice channel within a server.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the channel."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "voice"],
+          "description": "The type of the channel."
+        },
+        "topic": {
+          "type": "string",
+          "description": "The channel's topic or description."
+        },
+        "serverId": {
+           "type": "string",
+          "description": "The ID of the server this channel belongs to."
+        }
+      },
+      "required": ["name", "type", "serverId"]
+    },
+    "serverMessage": {
+      "title": "Server Message",
+      "description": "A single message within a server channel.",
+      "type": "object",
+      "properties": {
+        "authorId": {
+          "type": "string"
+        },
+        "authorDisplayName": {
+          "type": "string"
+        },
+        "authorPhotoURL": {
+          "type": "string",
+          "format": "uri"
+        },
+        "text": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "channelId": {
+          "type": "string"
+        }
+      },
+      "required": ["authorId", "authorDisplayName", "text", "createdAt", "channelId"]
     }
   },
   "auth": {
@@ -189,6 +287,30 @@
         "$ref": "#/entities/message"
       },
       "description": "Stores messages for a direct message conversation."
+    },
+    "/servers/{serverId}": {
+      "schema": {
+        "$ref": "#/entities/server"
+      },
+      "description": "Stores server information."
+    },
+    "/servers/{serverId}/members/{userId}": {
+      "schema": {
+        "$ref": "#/entities/serverMember"
+      },
+      "description": "A subcollection storing the members of a server and their roles."
+    },
+    "/servers/{serverId}/channels/{channelId}": {
+      "schema": {
+        "$ref": "#/entities/channel"
+      },
+      "description": "A subcollection storing the channels within a server."
+    },
+    "/servers/{serverId}/channels/{channelId}/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/serverMessage"
+      },
+      "description": "Stores messages for a server channel."
     }
   }
 }

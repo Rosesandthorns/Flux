@@ -3,6 +3,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    function isServerMember(serverId) {
+      return get(/databases/$(database)/documents/servers/$(serverId)/members/$(request.auth.uid)).data != null;
+    }
+
+    function isServerRole(serverId, roles) {
+      return get(/databases/$(database)/documents/servers/$(serverId)/members/$(request.auth.uid)).data.role in roles;
+    }
+    
     match /users/{userId} {
       allow read: if request.auth != null;
       allow write: if request.auth.uid == userId;
@@ -10,9 +18,6 @@ service cloud.firestore {
 
     match /users/{userId}/friends/{friendId} {
       allow read: if request.auth.uid == userId;
-      // In a real production app, this should be handled by a Cloud Function for security.
-      // For this prototype, we are allowing any authenticated user to write to a friends list
-      // to enable client-side transactional writes for creating a friendship.
       allow write: if request.auth != null;
     }
 
@@ -31,6 +36,40 @@ service cloud.firestore {
         allow read: if request.auth.uid in conversationId.split('_');
         allow create: if request.auth.uid in conversationId.split('_') && request.auth.uid == request.resource.data.authorId;
         allow update, delete: if false;
+      }
+    }
+
+    match /servers/{serverId} {
+      allow read: if isServerMember(serverId);
+      allow create: if request.auth.uid == request.resource.data.ownerId;
+      allow update: if isServerRole(serverId, ['owner', 'admin']);
+      allow delete: if isServerRole(serverId, ['owner']);
+
+      match /members/{userId} {
+        allow read: if isServerMember(serverId);
+        // Allow user to join, or owner/admin to add
+        allow create: if request.auth.uid == userId || isServerRole(serverId, ['owner', 'admin']);
+        // Allow owner/admin to change roles
+        allow update: if isServerRole(serverId, ['owner', 'admin']);
+        // Allow user to leave, or owner/admin to kick
+        allow delete: if request.auth.uid == userId || isServerRole(serverId, ['owner', 'admin']);
+      }
+
+      match /channels/{channelId} {
+        // For now, any server member can read. Only owner/admin can manage.
+        allow read: if isServerMember(serverId);
+        allow create, update, delete: if isServerRole(serverId, ['owner', 'admin']);
+
+        match /messages/{messageId} {
+            // Any member can read messages.
+            allow read: if isServerMember(serverId);
+            // Author must be themselves and a member of the server.
+            allow create: if request.auth.uid == request.resource.data.authorId && isServerMember(serverId);
+            // Owner/admin can delete any message, users can delete their own.
+            allow delete: if isServerRole(serverId, ['owner', 'admin']) || request.auth.uid == resource.data.authorId;
+            // Updating messages is disabled.
+            allow update: if false;
+        }
       }
     }
   }
