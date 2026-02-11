@@ -104,7 +104,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                                     <div className="flex items-baseline gap-2">
                                         <p className="font-semibold text-primary">{msg.authorDisplayName}</p>
                                         <p className="text-xs text-muted-foreground">
-                                            {format(msg.createdAt.toDate(), 'PP p')}
+                                            {msg.createdAt ? format(msg.createdAt.toDate(), 'PP p') : null}
                                         </p>
                                     </div>
                                 )}

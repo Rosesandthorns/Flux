@@ -7,6 +7,6 @@ export interface Message {
   authorDisplayName: string;
   authorPhotoURL: string;
   text: string;
-  createdAt: Timestamp;
+  createdAt: Timestamp | null;
   conversationId: string;
 }
