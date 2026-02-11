@@ -38,7 +38,7 @@ export default function DirectMessages() {
             </div>
         </div>
 
-        <Tabs defaultValue="all" className="flex-1 flex flex-col overflow-hidden px-4">
+        <Tabs defaultValue="all" className="flex-1 flex flex-col overflow-hidden px-4 pt-2">
             <TooltipProvider>
                 <TabsList className="flex items-center gap-3 bg-transparent p-0 h-auto">
                     <Tooltip>
