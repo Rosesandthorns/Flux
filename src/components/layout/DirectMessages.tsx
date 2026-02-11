@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Check, X, Clock, Ban, UserPlus, Signal, Users } from 'lucide-react';
+import { Search, Check, X, Clock, Ban, UserPlus, Signal, Users, Smile, Settings } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Use chat avatars as placeholder for DM contacts
 const dmContacts = PlaceHolderImages.filter(img => img.id.startsWith('chat-avatar-')).map((img, index) => ({
@@ -25,13 +26,20 @@ const pendingRequests = [
     { id: 'pending-2', name: 'Eve', avatarUrl: PlaceHolderImages.find(i => i.id === 'chat-avatar-2')?.imageUrl, avatarHint: 'person' },
 ];
 
+const emojiCategories = {
+    "Smileys & People": ['😀', '😂', '😍', '🤔', '👋', '👍', '❤️', '🎉', '😊', '😎', '😢', '😠', '🙏', '👌', '🔥', '💯'],
+    "Animals & Nature": ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🌿', '🌸', '🌍', '☀️', '🌙', '⭐', '💧', '🔥'],
+    "Food & Drink": ['🍎', '🍕', '🍔', '🍟', '🍰', '☕', '🍺', '🍷', '🍇', '🍉', '🍓', '🍑', '🍍', '🥥', '🥝', '🥑'],
+    "Activities": ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱', '🎨', '🎯', '🎮', '🕹️', '🎲', '🎤', '🎧', '🎸'],
+};
+
 
 export default function DirectMessages() {
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
       {/* Sidebar with conversations and friend management */}
       <div className="w-full flex-shrink-0 border-r border-border/50 bg-secondary/30 flex flex-col md:w-80">
-        <div className="p-4 pb-2">
+        <div className="p-4 pb-0">
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Find or start a conversation" className="pl-9 bg-background" />
@@ -40,7 +48,7 @@ export default function DirectMessages() {
 
         <Tabs defaultValue="all" className="flex-1 flex flex-col overflow-hidden px-4 pt-2">
             <TooltipProvider>
-                <TabsList className="flex items-center gap-3 bg-transparent p-0 h-auto">
+                <TabsList className="flex items-center gap-3 bg-transparent p-0 h-auto pt-2">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <TabsTrigger value="online" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground p-2">
@@ -73,6 +81,22 @@ export default function DirectMessages() {
                             </TabsTrigger>
                         </TooltipTrigger>
                         <TooltipContent><p>Blocked</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="emojis" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground p-2">
+                                <Smile className="h-5 w-5" />
+                            </TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Emojis</p></TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="settings" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground p-2">
+                                <Settings className="h-5 w-5" />
+                            </TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Settings</p></TooltipContent>
                     </Tooltip>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -161,6 +185,38 @@ export default function DirectMessages() {
                             <Input placeholder="Enter a Username#0000" className="bg-transparent border-0 pr-48" />
                             <Button className="absolute right-2 top-1/2 -translate-y-1/2 h-8 bg-primary hover:bg-primary/90">Send Friend Request</Button>
                         </div>
+                    </div>
+                </TabsContent>
+                <TabsContent value="emojis">
+                    <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">Emojis</h2>
+                    <ScrollArea className="h-[calc(100vh-220px)]">
+                        <div className="p-2 space-y-4">
+                            {Object.entries(emojiCategories).map(([category, emojis]) => (
+                                <div key={category}>
+                                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">{category}</h3>
+                                    <div className="grid grid-cols-6 gap-2 text-xl">
+                                        {emojis.map(emoji => (
+                                            <span key={emoji} className="cursor-pointer rounded-md p-1 flex items-center justify-center hover:bg-accent">{emoji}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </TabsContent>
+                <TabsContent value="settings">
+                    <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">User Settings</h2>
+                    <div className="space-y-1">
+                        <button className="flex w-full items-center rounded-md px-2 py-2 text-left text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">My Account</button>
+                        <button className="flex w-full items-center rounded-md px-2 py-2 text-left text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Profiles</button>
+                        <button className="flex w-full items-center rounded-md px-2 py-2 text-left text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Privacy & Safety</button>
+                        <Separator className="my-2 bg-border/50" />
+                        <h3 className="px-2 text-xs font-bold uppercase text-muted-foreground">App Settings</h3>
+                        <button className="flex w-full items-center rounded-md px-2 py-2 text-left text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Appearance</button>
+                        <button className="flex w-full items-center rounded-md px-2 py-2 text-left text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Accessibility</button>
+                        <button className="flex w-full items-center rounded-md px-2 py-2 text-left text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">Voice & Video</button>
+                        <Separator className="my-2 bg-border/50" />
+                        <button className="flex w-full items-center rounded-md px-2 py-2 text-left text-red-500/90 transition-colors hover:bg-destructive/20 font-medium">Log Out</button>
                     </div>
                 </TabsContent>
             </div>
