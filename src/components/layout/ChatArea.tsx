@@ -1,6 +1,6 @@
 'use client';
 
-import { Hash, Pin, Users, Paperclip, Smile, Send, Pencil, Trash2 } from 'lucide-react';
+import { Hash, Pin, Users, Paperclip, Smile, Send, Pencil, Trash2, Check, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,12 +10,12 @@ import { Form, FormControl, FormField, FormItem } from '../ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useUser, useUserProfile, useFirestore, sendServerMessage, editServerMessage, deleteServerMessage, togglePinServerMessage } from '@/firebase';
+import { useUser, useUserProfile, useFirestore, sendServerMessage, editServerMessage, deleteServerMessage, togglePinServerMessage, useServerMembers, kickServerMember, updateUserRole } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import MessageRenderer from '../MessageRenderer';
 import { format } from 'date-fns';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -68,6 +68,10 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
     const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
     const [isSavingEdit, setIsSavingEdit] = useState(false);
     const [isPinnedSheetOpen, setIsPinnedSheetOpen] = useState(false);
+    const [isMembersSheetOpen, setIsMembersSheetOpen] = useState(false);
+    const [isUpdatingTrialMember, setIsUpdatingTrialMember] = useState<string | null>(null);
+
+    const { data: serverMembers, loading: membersLoading } = useServerMembers(serverId);
 
     const pinnedMessages = messages?.filter(msg => msg.pinned) || [];
 
@@ -79,6 +83,25 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
     const editForm = useForm<z.infer<typeof editFormSchema>>({
         resolver: zodResolver(editFormSchema),
     });
+
+    const isServerAdmin = member?.role === 'owner' || member?.role === 'admin';
+    const isGlobalAdmin = userProfile?.status === 'owner' || userProfile?.status === 'admin';
+    const canWrite = isServerAdmin || activeChannel?.userAccess === 'readwrite';
+
+    const { trialMembers, adminMembers, regularMembers } = useMemo(() => {
+        if (!serverMembers) return { trialMembers: [], adminMembers: [], regularMembers: [] };
+        
+        const trial = serverMembers.filter(m => m.role === 'trial');
+        const admins = serverMembers.filter(m => m.role === 'owner' || m.role === 'admin');
+        const regular = serverMembers.filter(m => m.role === 'user');
+
+        return { 
+            trialMembers: trial.sort((a,b) => a.userProfile.displayName.localeCompare(b.userProfile.displayName)),
+            adminMembers: admins.sort((a,b) => a.userProfile.displayName.localeCompare(b.userProfile.displayName)),
+            regularMembers: regular.sort((a,b) => a.userProfile.displayName.localeCompare(b.userProfile.displayName)),
+         };
+    }, [serverMembers]);
+
 
     async function onMessageSubmit(values: z.infer<typeof formSchema>) {
         if (!firestore || !user || !userProfile || !activeChannel) return;
@@ -129,6 +152,32 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
             toast({ variant: 'destructive', title: 'Error', description: 'Could not update pin status.' });
         }
     }
+
+    const handleAcceptTrialMember = async (memberId: string) => {
+        if (!firestore) return;
+        setIsUpdatingTrialMember(memberId);
+        try {
+            await updateUserRole(firestore, serverId, memberId, 'user');
+            toast({ title: "Member Accepted", description: "This user now has full access." });
+        } catch (e) {
+            toast({ variant: 'destructive', title: "Error", description: "Could not update member role." });
+        } finally {
+            setIsUpdatingTrialMember(null);
+        }
+    }
+
+    const handleKickTrialMember = async (memberId: string) => {
+        if (!firestore) return;
+        setIsUpdatingTrialMember(memberId);
+         try {
+            await kickServerMember(firestore, serverId, memberId);
+            toast({ title: "Member Kicked", description: "This user has been removed from the server." });
+        } catch (e) {
+            toast({ variant: 'destructive', title: "Error", description: "Could not kick member." });
+        } finally {
+            setIsUpdatingTrialMember(null);
+        }
+    }
     
     const startEditing = (message: ServerMessage) => {
         setEditingMessageId(message.id!);
@@ -170,10 +219,6 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
             </div>
         )
     }
-
-    const isServerAdmin = member?.role === 'owner' || member?.role === 'admin';
-    const isGlobalAdmin = userProfile?.status === 'owner' || userProfile?.status === 'admin';
-    const canWrite = isServerAdmin || activeChannel.userAccess === 'readwrite';
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -230,7 +275,109 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                     </ScrollArea>
                 </SheetContent>
             </Sheet>
-          <Button variant="ghost" size="icon"><Users className="h-5 w-5" /></Button>
+            <Sheet open={isMembersSheetOpen} onOpenChange={setIsMembersSheetOpen}>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon"><Users className="h-5 w-5" /></Button>
+                </SheetTrigger>
+                <SheetContent className="z-[111] flex flex-col">
+                    <SheetHeader>
+                        <SheetTitle>Server Members</SheetTitle>
+                        <SheetDescription>
+                            {serverMembers?.length || 0} members
+                        </SheetDescription>
+                    </SheetHeader>
+                    <ScrollArea className="flex-1 -mx-6">
+                        <div className="px-6 py-4 space-y-6">
+                            {membersLoading ? (
+                                <div className="flex justify-center items-center h-full">
+                                    <Loader2 className="h-8 w-8 animate-spin" />
+                                </div>
+                            ) : (
+                                <>
+                                    {isServerAdmin && trialMembers.length > 0 && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold uppercase text-amber-500 mb-2">Trial Members — {trialMembers.length}</h3>
+                                            <div className="space-y-2">
+                                                {trialMembers.map(m => (
+                                                    <div key={m.id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
+                                                        <div className="flex items-center gap-3">
+                                                             <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                                <Avatar className="h-9 w-9 cursor-pointer">
+                                                                    <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
+                                                                    <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                                                </Avatar>
+                                                            </UserProfilePopover>
+                                                             <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                                <p className="cursor-pointer hover:underline">{m.userProfile.displayName}</p>
+                                                            </UserProfilePopover>
+                                                        </div>
+                                                        {isUpdatingTrialMember === m.id ? (
+                                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                                        ) : (
+                                                            <div className="flex items-center gap-2">
+                                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive/80" onClick={() => handleKickTrialMember(m.id!)}>
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-green-500 hover:text-green-400" onClick={() => handleAcceptTrialMember(m.id!)}>
+                                                                    <Check className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {adminMembers.length > 0 && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Admins — {adminMembers.length}</h3>
+                                            <div className="space-y-2">
+                                                {adminMembers.map(m => (
+                                                    <div key={m.id} className="flex items-center p-2 rounded-md">
+                                                        <div className="flex items-center gap-3">
+                                                            <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                                <Avatar className="h-9 w-9 cursor-pointer">
+                                                                    <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
+                                                                    <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                                                </Avatar>
+                                                            </UserProfilePopover>
+                                                            <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                                <p className="cursor-pointer hover:underline">{m.userProfile.displayName}</p>
+                                                            </UserProfilePopover>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {regularMembers.length > 0 && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Members — {regularMembers.length}</h3>
+                                            <div className="space-y-2">
+                                                {regularMembers.map(m => (
+                                                    <div key={m.id} className="flex items-center p-2 rounded-md">
+                                                        <div className="flex items-center gap-3">
+                                                             <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                                <Avatar className="h-9 w-9 cursor-pointer">
+                                                                    <AvatarImage src={m.userProfile.photoURL} alt={m.userProfile.displayName} />
+                                                                    <AvatarFallback>{m.userProfile.displayName.charAt(0)}</AvatarFallback>
+                                                                </Avatar>
+                                                            </UserProfilePopover>
+                                                             <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
+                                                                <p className="cursor-pointer hover:underline">{m.userProfile.displayName}</p>
+                                                            </UserProfilePopover>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </SheetContent>
+            </Sheet>
         </div>
       </header>
 

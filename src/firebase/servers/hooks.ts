@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, type Query, doc, onSnapshot, getDoc, type DocumentReference, limit } from 'firebase/firestore';
 import type { Server, Channel, ServerMember, ServerMessage, VoiceParticipant } from './types';
+import type { UserProfile } from '../auth/users';
 
 
 // Hook to get all servers a user is a member of
@@ -120,4 +121,58 @@ export function useChannelParticipants(serverId: string, channelId: string | und
 
     const { data, loading, error } = useCollection<VoiceParticipant>(participantsQuery);
     return { participants: data, loading, error };
+}
+
+// Hook to get all members of a server with their profiles
+export function useServerMembers(serverId: string) {
+    const firestore = useFirestore();
+
+    const membersQuery = useMemo(() => {
+        if (!firestore || !serverId) return null;
+        return collection(firestore, `servers/${serverId}/members`);
+    }, [firestore, serverId]);
+
+    const { data: membersData, loading: membersLoading, error } = useCollection<ServerMember>(membersQuery);
+
+    const [membersWithProfiles, setMembersWithProfiles] = useState<Array<ServerMember & { userProfile: UserProfile }>>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (membersLoading) {
+            setLoading(true);
+            return;
+        }
+        if (!membersData || !firestore || error) {
+            setMembersWithProfiles([]);
+            setLoading(false);
+            return;
+        }
+        
+        const fetchProfiles = async () => {
+            setLoading(true);
+            const profiles = await Promise.all(
+                membersData.map(async (member) => {
+                    if (!member.id) return null;
+                    const userProfileRef = doc(firestore, 'users', member.id);
+                    const userProfileSnap = await getDoc(userProfileRef);
+                    if (!userProfileSnap.exists()) return null; // Or handle missing profile
+                    return {
+                        ...member,
+                        userProfile: { id: userProfileSnap.id, ...userProfileSnap.data() } as UserProfile,
+                    };
+                })
+            );
+            setMembersWithProfiles(profiles.filter(Boolean) as Array<ServerMember & { userProfile: UserProfile }>);
+            setLoading(false);
+        };
+
+        if (membersData.length > 0) {
+            fetchProfiles();
+        } else {
+            setMembersWithProfiles([]);
+            setLoading(false);
+        }
+    }, [membersData, firestore, membersLoading, error]);
+    
+    return { data: membersWithProfiles, loading };
 }

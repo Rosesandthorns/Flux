@@ -262,3 +262,15 @@ export const updateUserRole = (
         throw serverError;
     });
 };
+
+export async function kickServerMember(firestore: Firestore, serverId: string, userId: string) {
+    const memberRef = doc(firestore, `servers/${serverId}/members/${userId}`);
+    return deleteDoc(memberRef).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: memberRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+}
