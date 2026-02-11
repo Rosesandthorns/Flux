@@ -13,6 +13,7 @@ import {
   getDoc,
   setDoc,
   deleteDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -52,6 +53,8 @@ export async function createServer(firestore: Firestore, user: User, serverName:
         name: 'guide',
         type: 'text',
         serverId: newServerRef.id,
+        userAccess: 'readwrite',
+        topic: 'A place to get started in your new server.',
     });
 
     // 4. Create the welcome message in the #guide channel
@@ -128,7 +131,7 @@ export const sendServerMessage = (
 export const createChannel = (
     firestore: Firestore,
     serverId: string,
-    channelData: Pick<Channel, 'name' | 'type'>
+    channelData: Pick<Channel, 'name' | 'type' | 'userAccess'>
 ) => {
     const channelsRef = collection(firestore, `servers/${serverId}/channels`);
     const data = {
@@ -147,6 +150,25 @@ export const createChannel = (
         throw serverError;
     });
 };
+
+export const updateChannel = (
+    firestore: Firestore,
+    serverId: string,
+    channelId: string,
+    channelData: Partial<Pick<Channel, 'name' | 'topic' | 'userAccess'>>
+) => {
+    const channelRef = doc(firestore, `servers/${serverId}/channels/${channelId}`);
+    
+    return updateDoc(channelRef, channelData).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: channelRef.path,
+            operation: 'update',
+            requestResourceData: channelData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+}
 
 export async function leaveServer(firestore: Firestore, serverId: string, userId: string) {
     const memberRef = doc(firestore, `servers/${serverId}/members/${userId}`);

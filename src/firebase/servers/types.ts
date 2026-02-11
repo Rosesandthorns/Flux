@@ -25,6 +25,7 @@ export interface Channel {
     type: 'text' | 'voice';
     topic?: string;
     serverId: string;
+    userAccess: 'readwrite' | 'readonly' | 'none';
 }
 
 export interface ServerMessage {

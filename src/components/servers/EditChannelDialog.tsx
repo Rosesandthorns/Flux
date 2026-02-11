@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,27 +14,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { createChannel, useFirestore } from '@/firebase';
-import { Loader2, Hash, Volume2 } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { updateChannel, useFirestore } from '@/firebase';
+import { Loader2 } from 'lucide-react';
 import type { Channel } from '@/firebase/servers/types';
 import { Slider } from '../ui/slider';
 
-interface CreateChannelDialogProps {
+interface EditChannelDialogProps {
   serverId: string;
-  channelType: 'text' | 'voice';
+  channel: Channel;
   children: React.ReactNode;
 }
 
-export default function CreateChannelDialog({ serverId, channelType: initialType, children }: CreateChannelDialogProps) {
+export default function EditChannelDialog({ serverId, channel, children }: EditChannelDialogProps) {
     const [open, setOpen] = useState(false);
-    const [channelName, setChannelName] = useState('');
-    const [channelType, setChannelType] = useState<Channel['type']>(initialType);
-    const [userAccess, setUserAccess] = useState<'readwrite' | 'readonly' | 'none'>('readwrite');
+    const [channelName, setChannelName] = useState(channel.name);
+    const [channelTopic, setChannelTopic] = useState(channel.topic || '');
+    const [userAccess, setUserAccess] = useState<'readwrite' | 'readonly' | 'none'>(channel.userAccess || 'readwrite');
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
     const firestore = useFirestore();
 
+    useEffect(() => {
+        if (open) {
+            setChannelName(channel.name);
+            setChannelTopic(channel.topic || '');
+            setUserAccess(channel.userAccess || 'readwrite');
+        }
+    }, [open, channel]);
+    
     const permissionLevels = [
         { value: 'none', label: "Users can't see or type" },
         { value: 'readonly', label: "Users can see" },
@@ -48,24 +55,28 @@ export default function CreateChannelDialog({ serverId, channelType: initialType
         setUserAccess(valueSliderMap[value[0]]);
     }
 
-    const handleCreateChannel = async () => {
-        if (!firestore || !serverId || !channelName) return;
+    const handleUpdateChannel = async () => {
+        if (!firestore || !serverId || !channel.id || !channelName) return;
 
         setIsLoading(true);
         try {
-            await createChannel(firestore, serverId, { name: channelName, type: channelType, userAccess });
-            toast({
-                title: 'Channel Created!',
-                description: `#${channelName} is now live.`,
-            });
+            const updates: Partial<Channel> = {};
+            if (channelName !== channel.name) updates.name = channelName;
+            if (channelTopic !== (channel.topic || '')) updates.topic = channelTopic;
+            if (userAccess !== (channel.userAccess || 'readwrite')) updates.userAccess = userAccess;
+
+            if (Object.keys(updates).length > 0) {
+                await updateChannel(firestore, serverId, channel.id, updates);
+                toast({
+                    title: 'Channel Updated!',
+                    description: `#${channelName} has been updated.`,
+                });
+            }
             setOpen(false);
-            setChannelName('');
-            setChannelType(initialType);
-            setUserAccess('readwrite');
         } catch (error: any) {
             toast({
                 variant: 'destructive',
-                title: 'Error creating channel',
+                title: 'Error updating channel',
                 description: error.message,
             });
         } finally {
@@ -78,40 +89,32 @@ export default function CreateChannelDialog({ serverId, channelType: initialType
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className="z-[103]">
                 <DialogHeader>
-                    <DialogTitle>Create Channel</DialogTitle>
+                    <DialogTitle>Edit #{channel.name}</DialogTitle>
                     <DialogDescription>
-                        Give your new channel a name and set its permissions.
+                        Update channel settings. Changes will be applied immediately.
                     </DialogDescription>
                 </DialogHeader>
-                 <form onSubmit={(e) => { e.preventDefault(); handleCreateChannel(); }} className="space-y-6">
+                 <form onSubmit={(e) => { e.preventDefault(); handleUpdateChannel(); }} className="space-y-6">
                     <div className="space-y-2">
-                        <Label>Channel Type</Label>
-                        <RadioGroup defaultValue={channelType} onValueChange={(v) => setChannelType(v as Channel['type'])}>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="text" id="type-text" />
-                                <Label htmlFor="type-text" className="flex items-center gap-2 font-normal">
-                                    <Hash className="h-4 w-4" /> Text
-                                </Label>
-                            </div>
-                             <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="voice" id="type-voice" />
-                                <Label htmlFor="type-voice" className="flex items-center gap-2 font-normal">
-                                    <Volume2 className="h-4 w-4" /> Voice
-                                </Label>
-                            </div>
-                        </RadioGroup>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="channel-name-form" className="text-left">Channel Name</Label>
+                        <Label htmlFor="channel-name-form-edit" className="text-left">Channel Name</Label>
                         <Input
-                            id="channel-name-form"
-                            placeholder="new-channel"
+                            id="channel-name-form-edit"
                             value={channelName}
                             onChange={(e) => setChannelName(e.target.value.toLowerCase().replace(/\s/g, '-'))}
                         />
                          <p className="text-xs text-muted-foreground">Channel names must be lowercase, with no spaces.</p>
                     </div>
                      <div className="space-y-2">
+                        <Label htmlFor="channel-topic-form-edit" className="text-left">Channel Topic</Label>
+                        <Input
+                            id="channel-topic-form-edit"
+                            placeholder="Let everyone know what this channel is about"
+                            value={channelTopic}
+                            onChange={(e) => setChannelTopic(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
                         <Label>User Permissions</Label>
                         <p className="text-sm text-muted-foreground">{permissionLevels.find(p => p.value === userAccess)?.label}</p>
                         <Slider 
@@ -122,11 +125,12 @@ export default function CreateChannelDialog({ serverId, channelType: initialType
                             className="pt-2"
                         />
                     </div>
+
                     <DialogFooter>
                         <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
                         <Button type="submit" disabled={isLoading || !channelName}>
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Create Channel
+                            Save Changes
                         </Button>
                     </DialogFooter>
                  </form>

@@ -8,12 +8,41 @@ service cloud.firestore {
     }
 
     function isServerRole(serverId, roles) {
-      return get(/databases/$(database)/documents/servers/$(serverId)/members/$(request.auth.uid)).data.role in roles;
+      let memberData = get(/databases/$(database)/documents/servers/$(serverId)/members/$(request.auth.uid)).data;
+      return memberData != null && memberData.role in roles;
     }
 
-    function isAllowedToRead(serverId) {
-      let member = get(/databases/$(database)/documents/servers/$(serverId)/members/$(request.auth.uid));
-      return member != null && member.data.role != 'trial';
+    // Is the user a member who is not in the 'trial' state?
+    function isProperMember(serverId) {
+      return isServerRole(serverId, ['owner', 'admin', 'user']);
+    }
+
+    function isServerAdmin(serverId) {
+      return isServerRole(serverId, ['owner', 'admin']);
+    }
+
+    function canReadChannelContent(serverId, channelId) {
+      if (!isProperMember(serverId)) {
+        return false;
+      }
+      if (isServerAdmin(serverId)) {
+        return true;
+      }
+      let channel = get(/databases/$(database)/documents/servers/$(serverId)/channels/$(channelId));
+      // 'user' role check
+      return channel.data.userAccess in ['readwrite', 'readonly'];
+    }
+
+    function canWriteToChannel(serverId, channelId) {
+       if (!isProperMember(serverId)) {
+        return false;
+      }
+      if (isServerAdmin(serverId)) {
+        return true;
+      }
+      let channel = get(/databases/$(database)/documents/servers/$(serverId)/channels/$(channelId));
+      // 'user' role check
+      return channel.data.userAccess == 'readwrite';
     }
     
     match /users/{userId} {
@@ -47,27 +76,24 @@ service cloud.firestore {
     match /servers/{serverId} {
       allow read: if isServerMember(serverId);
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow update: if isServerRole(serverId, ['owner', 'admin']);
+      allow update: if isServerAdmin(serverId);
       allow delete: if isServerRole(serverId, ['owner']);
 
       match /members/{userId} {
         allow read: if isServerMember(serverId);
-        // Allow user to join, or owner/admin to add
-        allow create: if request.auth.uid == userId || isServerRole(serverId, ['owner', 'admin']);
-        // Allow owner/admin to change roles
-        allow update: if isServerRole(serverId, ['owner', 'admin']);
-        // Allow user to leave, or owner/admin to kick
-        allow delete: if request.auth.uid == userId || isServerRole(serverId, ['owner', 'admin']);
+        allow create: if request.auth.uid == userId || isServerAdmin(serverId);
+        allow update: if isServerAdmin(serverId);
+        allow delete: if request.auth.uid == userId || isServerAdmin(serverId);
       }
 
       match /channels/{channelId} {
-        allow read: if isAllowedToRead(serverId);
-        allow create, update, delete: if isServerRole(serverId, ['owner', 'admin']);
+        allow read: if isProperMember(serverId);
+        allow create, update, delete: if isServerAdmin(serverId);
 
         match /messages/{messageId} {
-            allow read: if isAllowedToRead(serverId);
-            allow create: if request.auth.uid == request.resource.data.authorId && isServerMember(serverId);
-            allow delete: if isServerRole(serverId, ['owner', 'admin']) || request.auth.uid == resource.data.authorId;
+            allow read: if canReadChannelContent(serverId, channelId);
+            allow create: if request.auth.uid == request.resource.data.authorId && canWriteToChannel(serverId, channelId);
+            allow delete: if isServerAdmin(serverId) || request.auth.uid == resource.data.authorId;
             allow update: if false;
         }
       }

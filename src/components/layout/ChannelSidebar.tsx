@@ -60,8 +60,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from '../ui/input';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import EditChannelDialog from '../servers/EditChannelDialog';
 
 export default function ChannelSidebar({ serverId }: { serverId: string }) {
   const params = useParams();
@@ -73,15 +74,21 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   const { channels, loading: channelsLoading } = useServerChannels(serverId);
   const { user } = useUser();
   const firestore = useFirestore();
-  const { data: member } = useServerMember(serverId, user?.uid);
+  const { data: member, loading: memberLoading } = useServerMember(serverId, user?.uid);
   
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showLeaveAlert, setShowLeaveAlert] = useState(false);
 
-  const canManageServer = member?.role === 'owner' || member?.role === 'admin';
+  const canManageServer = !memberLoading && (member?.role === 'owner' || member?.role === 'admin');
 
-  const textChannels = channels?.filter((c) => c.type === 'text') || [];
-  const voiceChannels = channels?.filter((c) => c.type === 'voice') || [];
+  const visibleChannels = useMemo(() => {
+    if (!channels || memberLoading) return [];
+    if (canManageServer) return channels;
+    return channels.filter(c => c.userAccess !== 'none');
+  }, [channels, canManageServer, memberLoading]);
+
+  const textChannels = visibleChannels?.filter((c) => c.type === 'text') || [];
+  const voiceChannels = visibleChannels?.filter((c) => c.type === 'voice') || [];
 
   const {
     activeVoiceChannel,
@@ -158,36 +165,53 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             {canManageServer && (
               <TooltipProvider>
                 <Tooltip>
+                  <TooltipTrigger asChild>
                     <CreateChannelDialog serverId={serverId} channelType="text">
-                        <TooltipTrigger asChild>
-                            <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            >
-                            <Plus className="h-4 w-4" />
-                            </Button>
-                        </TooltipTrigger>
+                        <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        >
+                        <Plus className="h-4 w-4" />
+                        </Button>
                     </CreateChannelDialog>
+                  </TooltipTrigger>
                   <TooltipContent>Create Channel</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
           </div>
           {textChannels.map((channel) => (
-            <Link
-              key={channel.id}
-              href={`/channels/${serverId}/${channel.id}`}
-              className={cn(
-                'flex w-full items-center rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
-                channelId === channel.id
-                  ? 'bg-accent text-accent-foreground'
-                  : ''
+             <div key={channel.id} className="group relative flex items-center pr-2">
+              <Link
+                href={`/channels/${serverId}/${channel.id}`}
+                className={cn(
+                  'flex flex-1 items-center rounded-md py-1.5 pl-2 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+                  channelId === channel.id ? 'bg-accent text-accent-foreground' : ''
+                )}
+              >
+                <Hash className="mr-2 h-4 w-4" />
+                <span>{channel.name}</span>
+              </Link>
+              {canManageServer && (
+                <EditChannelDialog serverId={serverId} channel={channel}>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
+                                >
+                                    <Settings className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">Edit Channel</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </EditChannelDialog>
               )}
-            >
-              <Hash className="mr-2 h-4 w-4" />
-              <span>{channel.name}</span>
-            </Link>
+            </div>
           ))}
         </div>
         <div className="mt-4 space-y-1">
@@ -198,28 +222,28 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             {canManageServer && (
               <TooltipProvider>
                 <Tooltip>
-                    <CreateChannelDialog serverId={serverId} channelType="voice">
-                        <TooltipTrigger asChild>
-                            <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            >
-                            <Plus className="h-4 w-4" />
-                            </Button>
-                        </TooltipTrigger>
-                    </CreateChannelDialog>
+                    <TooltipTrigger asChild>
+                      <CreateChannelDialog serverId={serverId} channelType="voice">
+                          <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          >
+                          <Plus className="h-4 w-4" />
+                          </Button>
+                      </CreateChannelDialog>
+                    </TooltipTrigger>
                   <TooltipContent>Create Channel</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
           </div>
           {voiceChannels.map((channel) => (
-            <div key={channel.id}>
+            <div key={channel.id} className="group relative flex items-center pr-2">
               <button
                 onClick={() => joinChannel(channel.name)}
                 className={cn(
-                  'flex w-full items-center rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+                  'flex flex-1 items-center rounded-md py-1.5 pl-2 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
                   activeVoiceChannel === channel.name &&
                     'bg-accent text-accent-foreground'
                 )}
@@ -227,6 +251,24 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
                 <Volume2 className="mr-2 h-4 w-4" />
                 <span>{channel.name}</span>
               </button>
+               {canManageServer && (
+                <EditChannelDialog serverId={serverId} channel={channel}>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
+                                >
+                                    <Settings className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">Edit Channel</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </EditChannelDialog>
+              )}
               {activeVoiceChannel === channel.name && (
                 <div className="pt-2 pl-4">
                   <TooltipProvider>
@@ -345,7 +387,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             <SheetContent
               showCloseButton={false}
               side="top"
-              className="h-screen w-screen p-0 border-none"
+              className="h-screen w-screen p-0 border-none z-[103]"
             >
               <SheetHeader className="sr-only">
                 <SheetTitle>Settings</SheetTitle>
@@ -361,7 +403,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
 
       {/* Invite Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent>
+        <DialogContent className="z-[103]">
             <DialogHeader>
                 <DialogTitle>Invite friends to {server?.name}</DialogTitle>
                 <DialogDescription>
@@ -379,7 +421,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
       
       {/* Leave Server Alert */}
       <AlertDialog open={showLeaveAlert} onOpenChange={setShowLeaveAlert}>
-          <AlertDialogContent>
+          <AlertDialogContent className="z-[103]">
               <AlertDialogHeader>
                   <AlertDialogTitle>Leave '{server?.name}'?</AlertDialogTitle>
                   <AlertDialogDescription>

@@ -233,9 +233,15 @@
         "serverId": {
            "type": "string",
           "description": "The ID of the server this channel belongs to."
+        },
+        "userAccess": {
+            "type": "string",
+            "enum": ["readwrite", "readonly", "none"],
+            "description": "Controls access for users with the 'user' role.",
+            "default": "readwrite"
         }
       },
-      "required": ["name", "type", "serverId"]
+      "required": ["name", "type", "serverId", "userAccess"]
     },
     "serverMessage": {
       "title": "Server Message",
