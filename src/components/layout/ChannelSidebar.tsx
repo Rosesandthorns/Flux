@@ -134,7 +134,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   }
 
   return (
-    <div className="flex h-full w-64 flex-col bg-secondary/30 backdrop-blur-xl shrink-0">
+    <div className="relative z-[102] flex h-full w-64 flex-col bg-secondary/30 backdrop-blur-xl shrink-0">
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-border/50 px-4 shadow-sm">
         <h1 className="text-lg font-bold tracking-tight text-primary">
           {server?.name || 'Server'}

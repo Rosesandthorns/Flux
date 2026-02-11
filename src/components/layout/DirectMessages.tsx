@@ -89,7 +89,7 @@ export default function DirectMessages() {
 
   return (
     <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
-      <div className="w-full flex-shrink-0 border-r border-border/50 bg-secondary/30 flex flex-col md:w-80">
+      <div className="relative z-[102] w-full flex-shrink-0 border-r border-border/50 bg-secondary/30 flex flex-col md:w-80">
         <div className="p-4 pb-0">
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
