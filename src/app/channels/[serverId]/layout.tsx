@@ -1,7 +1,6 @@
 'use client'
 
 import ChannelSidebar from "@/components/layout/ChannelSidebar";
-import ServerRail from "@/components/layout/ServerRail";
 
 interface ServerLayoutProps {
     children: React.ReactNode;
@@ -17,7 +16,6 @@ export default function ServerLayout({ children, params }: ServerLayoutProps) {
                 <ChannelSidebar serverId={params.serverId} />
                 {children}
             </div>
-            <ServerRail activeServerId={params.serverId} />
         </div>
     )
 }

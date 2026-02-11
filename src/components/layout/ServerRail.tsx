@@ -18,14 +18,17 @@ import { useUserServers } from '@/firebase';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
 import AddServerDialog from '../servers/AddServerDialog';
+import { useParams } from 'next/navigation';
 
-export default function ServerRail({ activeServerId }: { activeServerId?: string }) {
+export default function ServerRail() {
+    const params = useParams();
+    const activeServerId = params.serverId as string | undefined;
     const { servers, loading } = useUserServers();
     
     return (
     <TooltipProvider delayDuration={0}>
         <div className="group pointer-events-none fixed bottom-0 left-0 right-0 z-50 flex h-24 items-end justify-center pb-6">
-            <nav className="pointer-events-auto flex items-center gap-3 rounded-full border border-border/50 bg-background/50 p-2 shadow-lg backdrop-blur-md transform-gpu opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100 group-hover:translate-y-0 translate-y-6">
+            <nav className="pointer-events-auto flex transform-gpu items-center gap-3 rounded-full border border-border/50 bg-background/50 p-2 shadow-lg backdrop-blur-md opacity-0 transition-all duration-300 ease-in-out translate-y-full group-hover:opacity-100 group-hover:translate-y-0">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Link
