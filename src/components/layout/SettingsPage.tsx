@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -329,8 +330,8 @@ export default function SettingsPage() {
                             </CardHeader>
                             <CardContent>
                                 <RadioGroup 
-                                    value={userProfile.privacy.whoCanDm}
-                                    onValueChange={(value) => handleSettingsUpdate({ privacy: { ...userProfile.privacy, whoCanDm: value as any }})}
+                                    value={userProfile.privacy?.whoCanDm ?? 'anyone'}
+                                    onValueChange={(value) => handleSettingsUpdate({ 'privacy.whoCanDm': value as any })}
                                 >
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="anyone" id="dm-anyone" />
@@ -350,8 +351,8 @@ export default function SettingsPage() {
                             </CardHeader>
                             <CardContent>
                                 <RadioGroup 
-                                     value={userProfile.privacy.whoCanAdd}
-                                     onValueChange={(value) => handleSettingsUpdate({ privacy: { ...userProfile.privacy, whoCanAdd: value as any }})}
+                                     value={userProfile.privacy?.whoCanAdd ?? 'anyone'}
+                                     onValueChange={(value) => handleSettingsUpdate({ 'privacy.whoCanAdd': value as any })}
                                 >
                                     <div className="flex items-center space-x-2 mb-2">
                                         <RadioGroupItem value="anyone" id="add-anyone" />
@@ -413,8 +414,8 @@ export default function SettingsPage() {
                                     </div>
                                     <Switch 
                                         id="notif-friend-requests" 
-                                        checked={userProfile.notifications.friendRequests}
-                                        onCheckedChange={(checked) => handleSettingsUpdate({ notifications: { ...userProfile.notifications, friendRequests: checked } })}
+                                        checked={userProfile.notifications?.friendRequests ?? true}
+                                        onCheckedChange={(checked) => handleSettingsUpdate({ 'notifications.friendRequests': checked })}
                                     />
                                 </div>
                                  <div className="flex items-center justify-between">
@@ -424,8 +425,8 @@ export default function SettingsPage() {
                                     </div>
                                     <Switch 
                                         id="notif-mentions" 
-                                        checked={userProfile.notifications.mentions}
-                                        onCheckedChange={(checked) => handleSettingsUpdate({ notifications: { ...userProfile.notifications, mentions: checked } })}
+                                        checked={userProfile.notifications?.mentions ?? true}
+                                        onCheckedChange={(checked) => handleSettingsUpdate({ 'notifications.mentions': checked })}
                                     />
                                 </div>
                                 <div className="flex items-center justify-between">
@@ -435,8 +436,8 @@ export default function SettingsPage() {
                                     </div>
                                     <Switch 
                                         id="notif-dms"
-                                        checked={userProfile.notifications.dms}
-                                        onCheckedChange={(checked) => handleSettingsUpdate({ notifications: { ...userProfile.notifications, dms: checked } })}
+                                        checked={userProfile.notifications?.dms ?? false}
+                                        onCheckedChange={(checked) => handleSettingsUpdate({ 'notifications.dms': checked })}
                                     />
                                 </div>
                             </CardContent>
