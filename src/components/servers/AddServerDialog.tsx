@@ -137,7 +137,7 @@ export default function AddServerDialog({ children }: { children: React.ReactNod
                             <TabsTrigger value="create">Create</TabsTrigger>
                             <TabsTrigger value="join">Join</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="create" className="flex-1 flex flex-col justify-center items-center p-6">
+                        <TabsContent value="create" className="flex-1 flex flex-col justify-center items-center">
                             <Card className="w-full max-w-md mx-auto border-none shadow-none bg-transparent">
                                 <CardHeader className="text-center px-0">
                                     <CardTitle className="text-2xl">Create Your Server</CardTitle>
@@ -146,7 +146,7 @@ export default function AddServerDialog({ children }: { children: React.ReactNod
                                 <CardContent className="px-0">{createForm}</CardContent>
                             </Card>
                         </TabsContent>
-                        <TabsContent value="join" className="flex-1 flex flex-col justify-center items-center p-6">
+                        <TabsContent value="join" className="flex-1 flex flex-col justify-center items-center">
                              <Card className="w-full max-w-md mx-auto border-none shadow-none bg-transparent">
                                 <CardHeader className="text-center px-0">
                                     <CardTitle className="text-2xl">Join a Server</CardTitle>
@@ -159,7 +159,7 @@ export default function AddServerDialog({ children }: { children: React.ReactNod
                 </div>
 
                 {/* Desktop view with 2 columns */}
-                <div className="hidden md:flex flex-1 items-center justify-center gap-8 p-8">
+                <div className="hidden md:flex flex-1 items-center justify-center gap-8">
                     <Card className="w-full max-w-lg transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-2xl bg-secondary/50">
                         <CardHeader className="text-center p-8">
                              <div className="mx-auto bg-primary/10 rounded-full p-4 w-fit mb-4">
