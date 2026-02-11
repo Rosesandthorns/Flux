@@ -91,7 +91,7 @@ body {
     --secondary-foreground: 210 40% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+    --accent: 262 85% 30%; /* Dark Purple */
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -125,20 +125,19 @@ body {
 
   /* Crimson Theme */
   .theme-crimson {
-    /* Gradient handled by bg-gradient-* in the body tag */
     --background: 347 72% 23%; /* Deep red crimson */
     --foreground: 0 0% 98%;
     --card: 347 60% 18%;
     --card-foreground: 0 0% 98%;
     --popover: 347 70% 15%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 95%; /* Black accent (using near white for primary text) */
+    --primary: 0 0% 95%; /* White accent color for buttons etc. */
     --primary-foreground: 0 0% 3.9%;
     --secondary: 347 50% 30%;
     --secondary-foreground: 0 0% 98%;
     --muted: 347 40% 35%;
     --muted-foreground: 0 0% 80%;
-    --accent: 347 50% 30%;
+    --accent: 0 0% 10%; /* Black accent */
     --accent-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -177,6 +176,9 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+  body.theme-crimson {
+    background-image: linear-gradient(to bottom, #ef4444, #991b1b);
   }
 }
 
