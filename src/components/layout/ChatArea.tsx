@@ -1,7 +1,6 @@
 'use client';
 
 import { Hash, Pin, Users, Paperclip, Smile, Send, Pencil, Trash2, Check, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -37,6 +36,18 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import UserProfilePopover from '../UserProfilePopover';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from '@/components/ui/dialog';
+import EmojiPicker from '../EmojiPicker';
+import Image from 'next/image';
 
 
 interface ChatAreaProps {
@@ -48,11 +59,11 @@ interface ChatAreaProps {
 }
 
 const formSchema = z.object({
-  text: z.string().min(1, "Message cannot be empty."),
+  text: z.string().max(2000),
 });
 
 const editFormSchema = z.object({
-  text: z.string().min(1, "Message cannot be empty."),
+  text: z.string().min(1, "Message cannot be empty.").max(2000),
 });
 
 
@@ -70,6 +81,11 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
     const [isPinnedSheetOpen, setIsPinnedSheetOpen] = useState(false);
     const [isMembersSheetOpen, setIsMembersSheetOpen] = useState(false);
     const [isUpdatingTrialMember, setIsUpdatingTrialMember] = useState<string | null>(null);
+    const [attachments, setAttachments] = useState<string[]>([]);
+    const [attachmentUrls, setAttachmentUrls] = useState("");
+    const [isAttachmentDialogOpen, setIsAttachmentDialogOpen] = useState(false);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+
 
     const { data: serverMembers, loading: membersLoading } = useServerMembers(serverId);
     const authorIds = useMemo(() => (messages ? [...new Set(messages.map((m) => m.authorId))] : []), [messages]);
@@ -107,13 +123,22 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
 
     async function onMessageSubmit(values: z.infer<typeof formSchema>) {
         if (!firestore || !user || !userProfile || !activeChannel) return;
+
+        let messageText = values.text;
+        if (attachments.length > 0) {
+            const attachmentMarkdown = attachments.map(url => `\n![image](${url})`).join('');
+            messageText += attachmentMarkdown;
+        }
+
+        if (!messageText.trim()) return;
         
         await sendServerMessage(firestore, serverId, activeChannel.id!, {
-            text: values.text,
+            text: messageText,
             authorId: user.uid,
         });
 
         messageForm.reset();
+        setAttachments([]);
     }
     
     async function onEditSubmit(values: z.infer<typeof editFormSchema>) {
@@ -193,6 +218,35 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
         setDeletingMessageId(message.id!);
         setIsDeleteAlertOpen(true);
     }
+
+    const handleEmojiSelect = (emoji: string) => {
+        const textarea = inputRef.current;
+        if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = messageForm.getValues("text");
+            const newText = text.substring(0, start) + emoji + text.substring(end);
+            messageForm.setValue("text", newText, { shouldValidate: true });
+            
+            setTimeout(() => {
+                textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+                textarea.focus();
+            }, 0);
+        }
+    };
+
+    const handleAddAttachments = () => {
+        const urls = attachmentUrls.split('\n').map(url => url.trim()).filter(url => url.startsWith('http'));
+        const newAttachments = [...attachments, ...urls].slice(0, 20);
+        setAttachments(newAttachments);
+        setAttachmentUrls("");
+        setIsAttachmentDialogOpen(false);
+    }
+
+    const removeAttachment = (index: number) => {
+        setAttachments(prev => prev.filter((_, i) => i !== index));
+    }
+
 
     useEffect(() => {
         if (scrollAreaRef.current && messages?.length) {
@@ -422,10 +476,12 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                     )}
                     <div className="w-10">
                         {showAuthor && (
-                            <Avatar className="h-10 w-10">
-                                <AvatarImage src={author.photoURL} alt={author.displayName} />
-                                <AvatarFallback>{author.displayName.charAt(0)}</AvatarFallback>
-                            </Avatar>
+                            <UserProfilePopover userId={msg.authorId} serverId={serverId} currentUserMember={member}>
+                                <Avatar className="h-10 w-10 cursor-pointer">
+                                    <AvatarImage src={author.photoURL} alt={author.displayName} />
+                                    <AvatarFallback>{author.displayName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                            </UserProfilePopover>
                         )}
                     </div>
                     <div className='flex-1'>
@@ -485,36 +541,86 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
         </ScrollArea>
       </div>
 
-      <footer className="shrink-0 border-t border-border/50 p-4">
+      <footer className="shrink-0 border-t border-border/50 p-2 sm:p-4">
         <Form {...messageForm}>
-            <form onSubmit={messageForm.handleSubmit(onMessageSubmit)} className="relative">
-                 <FormField
-                    control={messageForm.control}
-                    name="text"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormControl>
-                                 <Input
-                                    placeholder={canWrite ? `Message #${activeChannel.name}` : "You don't have permission to post here."}
-                                    className="h-11 bg-secondary/80 pr-24 text-base"
-                                    autoComplete="off"
-                                    disabled={!canWrite}
-                                    {...field}
+            <form onSubmit={messageForm.handleSubmit(onMessageSubmit)} className="flex flex-col">
+                {attachments.length > 0 && (
+                    <div className="p-2 border-b">
+                        <p className="text-xs text-muted-foreground mb-2">Attachments ({attachments.length}/20)</p>
+                        <div className="flex gap-2 flex-wrap">
+                            {attachments.map((url, index) => (
+                                <div key={index} className="relative h-16 w-16 rounded-md overflow-hidden">
+                                    <Image src={url} alt={`Attachment ${index + 1}`} fill className="object-cover" />
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-black/50"
+                                        onClick={() => removeAttachment(index)}
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                <div className="relative">
+                     <FormField
+                        control={messageForm.control}
+                        name="text"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormControl>
+                                     <Textarea
+                                        ref={inputRef}
+                                        placeholder={canWrite ? `Message #${activeChannel.name}` : "You don't have permission to post here."}
+                                        className="h-auto max-h-48 bg-secondary/80 pr-32 text-base resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                                        autoComplete="off"
+                                        disabled={!canWrite}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                if (messageForm.getValues("text").trim() || attachments.length > 0) {
+                                                    messageForm.handleSubmit(onMessageSubmit)();
+                                                }
+                                            }
+                                        }}
+                                        {...field}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        <Dialog open={isAttachmentDialogOpen} onOpenChange={setIsAttachmentDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" type="button" disabled={!canWrite}>
+                                    <Paperclip className="h-5 w-5" />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Attach Images</DialogTitle>
+                                    <DialogDescription>Paste up to 20 image URLs, one per line. They will be appended to your message.</DialogDescription>
+                                </DialogHeader>
+                                <Textarea 
+                                    placeholder="https://example.com/image1.png&#10;https://example.com/image2.jpg"
+                                    className="h-48"
+                                    value={attachmentUrls}
+                                    onChange={(e) => setAttachmentUrls(e.target.value)}
                                 />
-                            </FormControl>
-                        </FormItem>
-                    )}
-                />
-                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" type="button" disabled={!canWrite}>
-                        <Paperclip className="h-5 w-5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" type="button" disabled={!canWrite}>
-                        <Smile className="h-5 w-5" />
-                    </Button>
-                     <Button variant="ghost" size="icon" className="h-8 w-8" type="submit" disabled={messageForm.formState.isSubmitting || !canWrite}>
-                        <Send className="h-5 w-5" />
-                    </Button>
+                                <DialogFooter>
+                                    <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+                                    <Button type="button" onClick={handleAddAttachments}>Add Images</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                        <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={!canWrite} />
+                         <Button variant="ghost" size="icon" className="h-8 w-8" type="submit" disabled={messageForm.formState.isSubmitting || !canWrite || (!messageForm.getValues("text") && attachments.length === 0)}>
+                            <Send className="h-5 w-5" />
+                        </Button>
+                    </div>
                 </div>
             </form>
         </Form>
