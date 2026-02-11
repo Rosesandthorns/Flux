@@ -1,10 +1,14 @@
 {
   "entities": {
-    "user": {
-      "title": "User",
-      "description": "A user of the application.",
+    "userProfile": {
+      "title": "User Profile",
+      "description": "A user's profile data.",
       "type": "object",
       "properties": {
+        "handle": {
+          "type": "string",
+          "description": "The user's unique handle (e.g., username@flux)."
+        },
         "displayName": {
           "type": "string",
           "description": "The user's display name."
@@ -18,18 +22,27 @@
           "type": "string",
           "format": "uri",
           "description": "The URL of the user's profile picture."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the user account was created."
+        },
+        "status": {
+          "type": "string",
+          "description": "The user's status or role.",
+          "default": "user"
         }
       },
-      "required": ["displayName", "email"]
+      "required": ["handle", "displayName", "email", "createdAt", "status"]
     }
   },
   "auth": {
-    "providers": ["anonymous"]
+    "providers": ["email"]
   },
   "firestore": {
     "/users/{userId}": {
       "schema": {
-        "$ref": "#/entities/user"
+        "$ref": "#/entities/userProfile"
       },
       "description": "Stores user profile information."
     }

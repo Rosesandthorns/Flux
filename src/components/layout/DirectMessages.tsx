@@ -5,7 +5,6 @@ import { Search, Check, X, Clock, Ban, UserPlus, Signal, Users, Settings, Mic, H
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -13,30 +12,21 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import DMChatArea from './DMChatArea';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
 import SettingsPage from './SettingsPage';
+import { useUserProfile } from '@/firebase';
 
 
-// Use chat avatars as placeholder for DM contacts
-const dmContactsData = PlaceHolderImages.filter(img => img.id.startsWith('chat-avatar-')).map((img, index) => ({
-    id: img.id,
-    name: ['Alice', 'Bob', 'Charlie'][index],
-    avatarUrl: img.imageUrl,
-    avatarHint: img.imageHint,
-    status: index % 2 === 0 ? 'Online' : 'Offline',
-}));
-
-// Mock data for pending requests
+const dmContactsData: any[] = [];
 const pendingRequests: { id: string; name: string; avatarUrl?: string; avatarHint?: string }[] = [];
 
-const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
-
-type Contact = typeof dmContactsData[0];
+type Contact = (typeof dmContactsData)[0];
 
 export default function DirectMessages() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const { data: userProfile } = useUserProfile();
   
   const dmContacts = dmContactsData;
 
-  const onlineContacts = dmContacts.filter(c => c.status === 'Online');
+  const onlineContacts = dmContacts.filter((c: any) => c.status === 'Online');
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
@@ -100,7 +90,7 @@ export default function DirectMessages() {
             <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                 <TabsContent value="online">
                     <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">Online — {onlineContacts.length}</h2>
-                    {onlineContacts.length > 0 ? onlineContacts.map(contact => (
+                    {onlineContacts.length > 0 ? onlineContacts.map((contact: any) => (
                          <button key={contact.id} onClick={() => setSelectedContact(contact)} className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}>
                             <Avatar className="h-10 w-10 relative">
                                 <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint={contact.avatarHint as string} />
@@ -118,7 +108,7 @@ export default function DirectMessages() {
                 </TabsContent>
                 <TabsContent value="all">
                      <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">All Friends — {dmContacts.length}</h2>
-                    {dmContacts.length > 0 ? dmContacts.map(contact => (
+                    {dmContacts.length > 0 ? dmContacts.map((contact: any) => (
                         <button key={contact.id} onClick={() => setSelectedContact(contact)} className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}>
                             <Avatar className="h-10 w-10 relative">
                                 <AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint={contact.avatarHint as string} />
@@ -187,11 +177,11 @@ export default function DirectMessages() {
         <footer className="mt-auto flex h-14 items-center border-t border-border/50 bg-background/30 px-2">
             <div className="flex items-center">
                 <Avatar className="h-8 w-8">
-                    {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint as string} />}
-                    <AvatarFallback>U</AvatarFallback>
+                    {userProfile?.photoURL && <AvatarImage src={userProfile.photoURL} alt="User Avatar" />}
+                    <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="ml-2">
-                    <p className="text-sm font-semibold">username</p>
+                    <p className="text-sm font-semibold">{userProfile?.displayName || 'username'}</p>
                     <p className="text-xs text-muted-foreground">Online</p>
                 </div>
             </div>

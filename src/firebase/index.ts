@@ -8,6 +8,7 @@ import FirebaseClientProvider from './client-provider';
 import { useUser } from './auth/use-user';
 import { useCollection } from './firestore/use-collection';
 import { useDoc } from './firestore/use-doc';
+import { useUserProfile } from './auth/use-user-profile';
 
 function initializeFirebase(): { app: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null; } {
     if (typeof window === 'undefined') {
@@ -37,4 +38,5 @@ export {
   useUser,
   useCollection,
   useDoc,
+  useUserProfile,
 };

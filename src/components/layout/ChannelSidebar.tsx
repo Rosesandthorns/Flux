@@ -4,16 +4,15 @@ import { useState } from 'react';
 import { ChevronDown, Hash, Mic, Settings, Volume2, Headphones, MicOff, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
 import SettingsPage from './SettingsPage';
 import { useVoice } from '@/context/VoiceContext';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useUserProfile } from '@/firebase';
 
 const textChannels: string[] = [];
 const voiceChannels: string[] = [];
-const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
 
 export default function ChannelSidebar() {
   const [activeChannel, setActiveChannel] = useState('general');
@@ -28,6 +27,7 @@ export default function ChannelSidebar() {
     toggleMute,
     toggleDeafen,
   } = useVoice();
+  const { data: userProfile } = useUserProfile();
 
   const effectiveMute = isMuted || isDeafened;
 
@@ -83,7 +83,7 @@ export default function ChannelSidebar() {
                                   'h-8 w-8 ring-2 ring-offset-background ring-offset-2 transition-all',
                                   speakingParticipantId === p.id && !isDeafened ? 'ring-primary' : 'ring-transparent'
                               )}>
-                                <AvatarImage src={p.avatarUrl} alt={p.name} data-ai-hint={p.avatarHint} />
+                                <AvatarImage src={p.avatarUrl} alt={p.name} />
                                 <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
                               </Avatar>
                             </TooltipTrigger>
@@ -123,11 +123,11 @@ export default function ChannelSidebar() {
       <footer className="flex h-14 items-center border-t border-border/50 bg-background/30 px-2">
         <div className="flex items-center">
           <Avatar className="h-8 w-8">
-            {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint} />}
-            <AvatarFallback>U</AvatarFallback>
+            {userProfile?.photoURL && <AvatarImage src={userProfile.photoURL} alt="User Avatar" />}
+            <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
           <div className="ml-2">
-            <p className="text-sm font-semibold">username</p>
+            <p className="text-sm font-semibold">{userProfile?.displayName || 'username'}</p>
             <p className="text-xs text-muted-foreground">Online</p>
           </div>
         </div>

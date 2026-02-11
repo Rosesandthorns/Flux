@@ -5,15 +5,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { User, Shield, Palette, KeyRound, Bell, LogOut, CheckCircle2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useTheme, type Theme } from "@/context/ThemeContext";
-
-const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
+import { useAuth, useUserProfile } from "@/firebase";
+import { signOut } from "firebase/auth";
+import { Skeleton } from "../ui/skeleton";
 
 type SettingsCategory = "My Account" | "Profiles" | "Privacy & Safety" | "Notifications" | "Keybinds";
 
@@ -34,8 +34,16 @@ const themes = [
 ];
 
 export default function SettingsPage() {
-    const [activeCategory, setActiveCategory] = useState<SettingsCategory>("Profiles");
+    const [activeCategory, setActiveCategory] = useState<SettingsCategory>("My Account");
     const { theme: selectedTheme, setTheme: setSelectedTheme } = useTheme();
+    const auth = useAuth();
+    const { data: userProfile, loading: userProfileLoading } = useUserProfile();
+
+    const handleLogout = async () => {
+        if (auth) {
+            await signOut(auth);
+        }
+    };
 
     const renderContent = () => {
         switch (activeCategory) {
@@ -46,19 +54,32 @@ export default function SettingsPage() {
                         <Card className="overflow-hidden">
                             <div className="bg-primary/10 h-24" />
                             <CardContent className="p-4 pt-0">
+                                {userProfileLoading ? (
+                                     <div className="flex justify-between items-end -mt-12">
+                                        <div className="flex items-end gap-4">
+                                            <Skeleton className="h-24 w-24 rounded-full border-4 border-background" />
+                                            <div>
+                                                 <Skeleton className="h-7 w-32 mb-1" />
+                                                 <Skeleton className="h-4 w-40" />
+                                            </div>
+                                        </div>
+                                        <Skeleton className="h-10 w-36" />
+                                    </div>
+                                ) : userProfile && (
                                 <div className="flex justify-between items-end -mt-12">
                                     <div className="flex items-end gap-4">
                                         <Avatar className="h-24 w-24 border-4 border-background rounded-full">
-                                            {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint} />}
-                                            <AvatarFallback>U</AvatarFallback>
+                                            {userProfile.photoURL && <AvatarImage src={userProfile.photoURL} alt="User Avatar" />}
+                                            <AvatarFallback>{userProfile.displayName?.charAt(0) || 'U'}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <h2 className="text-xl font-semibold">username</h2>
-                                            <p className="text-muted-foreground">username@flux</p>
+                                            <h2 className="text-xl font-semibold">{userProfile.displayName}</h2>
+                                            <p className="text-muted-foreground">{userProfile.handle}</p>
                                         </div>
                                     </div>
                                     <Button>Edit User Profile</Button>
                                 </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -237,7 +258,7 @@ export default function SettingsPage() {
                     </Button>
                 ))}
                 <Separator className="my-2 bg-border/50" />
-                <Button variant="ghost" className="justify-start gap-3 px-2 text-base py-5 text-destructive hover:text-destructive">
+                <Button variant="ghost" className="justify-start gap-3 px-2 text-base py-5 text-destructive hover:text-destructive" onClick={handleLogout}>
                     <LogOut className="h-5 w-5" />
                     <span>Log Out</span>
                 </Button>
