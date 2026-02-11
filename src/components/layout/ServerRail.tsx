@@ -11,7 +11,6 @@ import {
     SheetDescription,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import { DialogTrigger } from '@/components/ui/dialog';
 import ExploreServers from './ExploreServers';
 import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -80,13 +79,11 @@ export default function ServerRail() {
                     <AddServerDialog>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <DialogTrigger asChild>
                                     <button
                                         className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground transition-all duration-300 ease-in-out hover:bg-primary"
                                     >
                                         <Plus className="h-6 w-6" />
                                     </button>
-                                </DialogTrigger>
                             </TooltipTrigger>
                             <TooltipContent side="top">
                                 <p>Add a Server</p>
