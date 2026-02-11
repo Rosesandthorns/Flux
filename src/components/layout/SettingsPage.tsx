@@ -482,7 +482,15 @@ export default function SettingsPage() {
                 </Button>
             </nav>
             <ScrollArea className="flex-1">
-                <div className="p-8 max-w-4xl mx-auto">
+                <div 
+                    className="p-8 max-w-4xl mx-auto"
+                    onPointerDownOutside={(e: any) => {
+                        const target = e.target as HTMLElement;
+                        if (target.closest('[data-radix-dialog-content]')) {
+                            e.preventDefault();
+                        }
+                    }}
+                >
                     {renderContent()}
                 </div>
             </ScrollArea>
