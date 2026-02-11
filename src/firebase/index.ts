@@ -12,6 +12,9 @@ import { useUserProfile } from './auth/use-user-profile';
 import { updateUserSettings } from './auth/settings';
 import { sendFriendRequest, acceptFriendRequest, declineOrCancelFriendRequest } from './friends/actions';
 import { useFriends, useFriendRequests } from './friends/hooks';
+import { useMessages } from './messages/hooks';
+import { sendMessage } from './messages/actions';
+import type { Message } from './messages/types';
 
 function initializeFirebase(): { app: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null; } {
     if (typeof window === 'undefined') {
@@ -48,4 +51,7 @@ export {
   declineOrCancelFriendRequest,
   useFriends,
   useFriendRequests,
+  useMessages,
+  sendMessage,
 };
+export type { Message };

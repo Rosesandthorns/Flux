@@ -23,5 +23,15 @@ service cloud.firestore {
                     && request.resource.data.fromUserId != request.resource.data.toUserId;
       allow delete: if request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId;
     }
+
+    match /dms/{conversationId} {
+      allow read, write: if request.auth.uid in conversationId.split('_');
+
+      match /messages/{messageId} {
+        allow read: if request.auth.uid in conversationId.split('_');
+        allow create: if request.auth.uid in conversationId.split('_') && request.auth.uid == request.resource.data.authorId;
+        allow update, delete: if false;
+      }
+    }
   }
 }

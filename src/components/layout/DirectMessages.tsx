@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { Search, Check, X, Clock, Ban, UserPlus, Signal, Users, Settings, Mic, Headphones, Loader2 } from 'lucide-react';
@@ -148,7 +148,7 @@ export default function DirectMessages() {
             <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                 <TabsContent value="online">
                     <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground mb-2">Online — {onlineContacts.length}</h2>
-                    {onlineContacts.length > 0 ? onlineContacts.map((contact: any) => (
+                    {onlineContacts.length > 0 ? onlineContacts.map((contact) => (
                          <button key={contact.id} onClick={() => setSelectedContact(contact)} className={`flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors hover:bg-accent ${selectedContact?.id === contact.id ? 'bg-accent' : ''}`}>
                             <Avatar className="h-10 w-10 relative">
                                 <AvatarImage src={contact.userProfile.photoURL} alt={contact.userProfile.displayName} />
@@ -294,13 +294,7 @@ export default function DirectMessages() {
       <div className="hidden md:flex flex-1 flex-col bg-background">
         {selectedContact ? (
             <DMChatArea 
-                contact={{
-                    id: selectedContact.id,
-                    name: selectedContact.userProfile.displayName,
-                    avatarUrl: selectedContact.userProfile.photoURL || '',
-                    avatarHint: '',
-                    status: selectedContact.userProfile.status,
-                }} 
+                contact={selectedContact}
             />
         ) : (
             <div className="flex-1 flex items-center justify-center p-6">

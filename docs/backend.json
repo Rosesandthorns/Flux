@@ -98,29 +98,68 @@
       "required": ["userId", "createdAt"]
     },
     "friendRequest": {
-        "title": "Friend Request",
-        "description": "Represents a friend request sent from one user to another.",
-        "type": "object",
-        "properties": {
-            "fromUserId": {
-                "type": "string",
-                "description": "The UID of the user sending the request."
-            },
-            "toUserId": {
-                "type": "string",
-                "description": "The UID of the user receiving the request."
-            },
-            "status": {
-                "type": "string",
-                "enum": ["pending"],
-                "description": "The status of the friend request."
-            },
-            "createdAt": {
-                "type": "string",
-                "description": "The timestamp when the request was sent."
-            }
+      "title": "Friend Request",
+      "description": "Represents a friend request sent from one user to another.",
+      "type": "object",
+      "properties": {
+        "fromUserId": {
+          "type": "string",
+          "description": "The UID of the user sending the request."
         },
-        "required": ["fromUserId", "toUserId", "status", "createdAt"]
+        "toUserId": {
+          "type": "string",
+          "description": "The UID of the user receiving the request."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending"],
+          "description": "The status of the friend request."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the request was sent."
+        }
+      },
+      "required": ["fromUserId", "toUserId", "status", "createdAt"]
+    },
+    "message": {
+      "title": "Chat Message",
+      "description": "A single message within a chat conversation.",
+      "type": "object",
+      "properties": {
+        "authorId": {
+          "type": "string",
+          "description": "The UID of the user who sent the message."
+        },
+        "authorDisplayName": {
+          "type": "string",
+          "description": "The display name of the author at the time of sending."
+        },
+        "authorPhotoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "The profile picture URL of the author."
+        },
+        "text": {
+          "type": "string",
+          "description": "The content of the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the message was sent."
+        },
+        "conversationId": {
+          "type": "string",
+          "description": "The ID of the conversation this message belongs to."
+        }
+      },
+      "required": [
+        "authorId",
+        "authorDisplayName",
+        "text",
+        "createdAt",
+        "conversationId"
+      ]
     }
   },
   "auth": {
@@ -144,6 +183,12 @@
         "$ref": "#/entities/friendRequest"
       },
       "description": "Stores all friend requests between users."
+    },
+    "/dms/{conversationId}/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/message"
+      },
+      "description": "Stores messages for a direct message conversation."
     }
   }
 }
