@@ -106,7 +106,7 @@ export default function ServerRail() {
                                 <p>Explore Servers</p>
                             </TooltipContent>
                         </Tooltip>
-                        <SheetContent side="top" className="h-screen w-screen p-6 flex flex-col">
+                        <SheetContent showCloseButton={false} side="top" className="h-screen w-screen p-6 flex flex-col">
                            <SheetHeader className="text-center">
                                 <SheetTitle>Explore Public Servers</SheetTitle>
                                 <SheetDescription>Find your next community. Here are some popular servers to get you started.</SheetDescription>
