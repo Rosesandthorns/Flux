@@ -195,20 +195,13 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
               </Link>
               {canManageServer && (
                 <EditChannelDialog serverId={serverId} channel={channel}>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
-                                >
-                                    <Settings className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">Edit Channel</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
+                    >
+                        <Settings className="h-4 w-4" />
+                    </Button>
                 </EditChannelDialog>
               )}
             </div>
@@ -253,20 +246,13 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
               </button>
                {canManageServer && (
                 <EditChannelDialog serverId={serverId} channel={channel}>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
-                                >
-                                    <Settings className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">Edit Channel</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-auto h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
+                    >
+                        <Settings className="h-4 w-4" />
+                    </Button>
                 </EditChannelDialog>
               )}
               {activeVoiceChannel === channel.name && (
@@ -403,7 +389,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
 
       {/* Invite Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent className="z-[103]">
+        <DialogContent className="z-[104]">
             <DialogHeader>
                 <DialogTitle>Invite friends to {server?.name}</DialogTitle>
                 <DialogDescription>
@@ -421,7 +407,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
       
       {/* Leave Server Alert */}
       <AlertDialog open={showLeaveAlert} onOpenChange={setShowLeaveAlert}>
-          <AlertDialogContent className="z-[103]">
+          <AlertDialogContent className="z-[104]">
               <AlertDialogHeader>
                   <AlertDialogTitle>Leave '{server?.name}'?</AlertDialogTitle>
                   <AlertDialogDescription>
