@@ -6,6 +6,7 @@ import { Phone, PhoneOff, Mic, MicOff, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Card } from '../ui/card';
 import { useUser } from '@/firebase';
+import { usePathname } from 'next/navigation';
 
 // Ringtone component
 const Ringtone = () => {
@@ -123,10 +124,13 @@ function CallUI() {
 // Main Call Manager
 export default function DMCallManager() {
     const { currentCall } = useDMCall();
+    const pathname = usePathname();
+
+    if (['/login', '/signup'].includes(pathname)) {
+        return null;
+    }
     
     if (!currentCall) return null;
 
     return <CallUI />;
 }
-
-    

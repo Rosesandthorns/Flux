@@ -18,12 +18,17 @@ import { useUserServers } from '@/firebase';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
 import AddServerDialog from '../servers/AddServerDialog';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 
 export default function ServerRail() {
     const params = useParams();
+    const pathname = usePathname();
     const activeServerId = params.serverId as string | undefined;
     const { servers, loading } = useUserServers();
+
+    if (['/login', '/signup'].includes(pathname)) {
+        return null;
+    }
     
     const railContent = (
         <>
