@@ -156,7 +156,7 @@ export default function DirectMessages() {
                 <TabsContent value="add">
                     <div className="p-2">
                         <h2 className="text-lg font-bold uppercase">Add Friend</h2>
-                        <p className="text-muted-foreground text-sm mt-1 mb-4">You can add a friend with their FluxTag. It's cAsE-sEnSiTiVe!</p>
+                        <p className="text-muted-foreground text-sm mt-1 mb-4">You can add a friend with their FluxTag. It isn't case-sensitive.</p>
                         <div className="relative rounded-md bg-background/50">
                             <Input placeholder="Enter a Username#0000" className="bg-transparent border-0 pr-48" />
                             <Button className="absolute right-2 top-1/2 -translate-y-1/2 h-8 bg-primary hover:bg-primary/90">Send Friend Request</Button>
