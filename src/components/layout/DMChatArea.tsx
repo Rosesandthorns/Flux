@@ -141,10 +141,12 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <header className="hidden h-12 shrink-0 items-center border-b border-border/50 px-4 md:flex">
-        <div className="flex items-center">
-          <AtSign className="h-6 w-6 text-muted-foreground" />
-          <h2 className="ml-2 text-lg font-semibold">{contact.userProfile.displayName}</h2>
-        </div>
+        <UserProfilePopover userId={contact.id}>
+            <div className="flex items-center cursor-pointer rounded-md -ml-2 p-2 hover:bg-accent">
+                <AtSign className="h-6 w-6 text-muted-foreground" />
+                <h2 className="ml-2 text-lg font-semibold">{contact.userProfile.displayName}</h2>
+            </div>
+        </UserProfilePopover>
         <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="icon">
                 <Phone className="h-5 w-5" />
@@ -179,10 +181,12 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                             )}
                             <div className="w-10">
                                 {showAuthor && (
-                                    <Avatar className="h-10 w-10">
-                                        <AvatarImage src={msg.authorPhotoURL} alt={msg.authorDisplayName} />
-                                        <AvatarFallback>{msg.authorDisplayName.charAt(0)}</AvatarFallback>
-                                    </Avatar>
+                                    <UserProfilePopover userId={msg.authorId}>
+                                        <Avatar className="h-10 w-10 cursor-pointer">
+                                            <AvatarImage src={msg.authorPhotoURL} alt={msg.authorDisplayName} />
+                                            <AvatarFallback>{msg.authorDisplayName.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                    </UserProfilePopover>
                                 )}
                             </div>
                             <div className="flex-1">
@@ -228,16 +232,18 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                     )
                 })
              ) : (
-                <div className="flex items-start gap-4 pt-8 pl-4">
-                    <Avatar className="h-20 w-20">
-                        <AvatarImage src={contact.userProfile.photoURL} alt={contact.userProfile.displayName} />
-                        <AvatarFallback>{contact.userProfile.displayName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <h3 className="text-2xl font-bold">{contact.userProfile.displayName}</h3>
-                        <p className="text-muted-foreground">This is the beginning of your direct message history with <span className="font-semibold text-foreground">@{contact.userProfile.handle.split('@')[0]}</span>.</p>
+                <UserProfilePopover userId={contact.id}>
+                    <div className="flex items-start gap-4 pt-8 pl-4 cursor-pointer">
+                        <Avatar className="h-20 w-20">
+                            <AvatarImage src={contact.userProfile.photoURL} alt={contact.userProfile.displayName} />
+                            <AvatarFallback>{contact.userProfile.displayName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <h3 className="text-2xl font-bold hover:underline">{contact.userProfile.displayName}</h3>
+                            <p className="text-muted-foreground">This is the beginning of your direct message history with <span className="font-semibold text-foreground">@{contact.userProfile.handle.split('@')[0]}</span>.</p>
+                        </div>
                     </div>
-                </div>
+                </UserProfilePopover>
              )}
           </div>
         </ScrollArea>
