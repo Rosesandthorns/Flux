@@ -211,7 +211,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
         <Popover modal={true}>
             <PopoverTrigger asChild>{children}</PopoverTrigger>
             <PopoverContent 
-                className="w-80 p-0 max-h-[80vh]"
+                className="w-80 p-0"
                 onPointerDownOutside={(e) => {
                   const target = e.target as HTMLElement;
                   if (target.closest('[data-radix-dialog-content]') || target.closest('[data-radix-select-content]')) {
@@ -219,7 +219,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
                   }
                 }}
             >
-                <ScrollArea className="h-full w-full">
+                <ScrollArea className="max-h-[80vh]">
                     {profileLoading || (serverId && memberLoading) ? (
                         <div className="p-4 space-y-2">
                             <Skeleton className="h-20 w-20 rounded-full" />
