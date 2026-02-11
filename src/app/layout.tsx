@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { Providers } from '@/components/layout/providers';
+import { THEMES } from '@/lib/themes';
 
 export const metadata: Metadata = {
   title: 'Flux',
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 const ThemeScript = () => {
     const script = `
     (function() {
+      const THEMES = ${JSON.stringify(THEMES)};
       const getInitialTheme = () => {
         try {
           const storedTheme = window.localStorage.getItem('theme');
@@ -23,28 +25,20 @@ const ThemeScript = () => {
         return 'default';
       };
 
-      const theme = getInitialTheme();
+      const themeId = getInitialTheme();
+      const themeInfo = THEMES.find(t => t.id === themeId) || THEMES.find(t => t.id === 'default');
       const root = document.documentElement;
-      const themeClasses = ['dark', 'theme-void', 'theme-bright', 'theme-crimson', 'theme-jade'];
-      root.classList.remove(...themeClasses);
+      
+      const allThemeClasses = THEMES.map(t => 'theme-' + t.id);
+      root.classList.remove('dark', ...allThemeClasses);
 
-      switch (theme) {
-        case 'void':
-          root.classList.add('dark', 'theme-void');
-          break;
-        case 'bright':
-          root.classList.add('theme-bright');
-          break;
-        case 'crimson':
-          root.classList.add('dark', 'theme-crimson');
-          break;
-        case 'jade':
-          root.classList.add('theme-jade');
-          break;
-        case 'default':
-        default:
+      if (themeInfo) {
+        if (themeInfo.isDark) {
           root.classList.add('dark');
-          break;
+        }
+        root.classList.add('theme-' + themeInfo.id);
+      } else {
+         root.classList.add('dark');
       }
     })();
   `;

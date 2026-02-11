@@ -1,6 +1,7 @@
 
 
 
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,7 +14,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useTheme, type Theme } from "@/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
+import type { Theme } from "@/context/ThemeContext";
 import { useAuth, useUserProfile, useFirestore, updateUserSettings } from "@/firebase";
 import type { UserProfile } from "@/firebase/auth/users";
 import { signOut } from "firebase/auth";
@@ -37,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { serverTimestamp } from "firebase/firestore";
 import { add, formatDistanceToNow } from "date-fns";
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
+import { THEMES } from "@/lib/themes";
 
 type SettingsCategory = "My Account" | "Profiles" | "Privacy & Safety" | "Notifications" | "Keybinds";
 
@@ -46,14 +49,6 @@ const settingsCategories: { name: SettingsCategory, icon: React.ElementType }[] 
     { name: "Privacy & Safety", icon: Shield },
     { name: "Notifications", icon: Bell },
     { name: "Keybinds", icon: KeyRound },
-];
-
-const themes = [
-    { name: "Default", id: "default", colors: ["bg-background", "bg-primary", "bg-accent"] },
-    { name: "Void", id: "void", colors: ["bg-[#101014]", "bg-[#8000FF]", "bg-[#27272a]"] },
-    { name: "Bright", id: "bright", colors: ["bg-[#fafff0]", "bg-[#38bdf8]", "bg-[#dcfce7]"] },
-    { name: "Crimson", id: "crimson", colors: ["bg-gradient-to-b from-red-500 to-red-800", "bg-black", "bg-red-900/50"] },
-    { name: "Jade", id: "jade", colors: ["bg-slate-100", "bg-emerald-500", "bg-slate-200"] },
 ];
 
 const profileFormSchema = z.object({
@@ -296,13 +291,13 @@ export default function SettingsPage() {
                                 <CardDescription>Choose a color scheme for your app. The change will be applied application-wide.</CardDescription>
                             </CardHeader>
                             <CardContent className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                                {themes.map(theme => (
+                                {THEMES.map(theme => (
                                     <div key={theme.id} onClick={() => handleThemeChange(theme.id as Theme)} className="cursor-pointer">
                                         <div className={`relative overflow-hidden rounded-lg border-2 ${selectedTheme === theme.id ? 'border-primary' : 'border-border'}`}>
-                                            <div className="p-4 space-y-2">
+                                            <div className="p-4 space-y-2" style={{ backgroundColor: theme.isDark ? theme.previewColors[0] : theme.previewColors[0] }}>
                                                 <div className="flex gap-2">
-                                                    {theme.colors.map((color, index) => (
-                                                        <div key={index} className={`h-10 w-full rounded ${color} ${index === 0 && theme.id === 'crimson' ? '' : 'flex-1'}`} />
+                                                    {theme.previewColors.map((color, index) => (
+                                                        <div key={index} style={{backgroundColor: color}} className={`h-10 w-full rounded ${index === 0 && theme.id === 'crimson' ? '' : 'flex-1'}`} />
                                                     ))}
                                                 </div>
                                                 <div className="h-6 w-3/4 rounded bg-muted" />

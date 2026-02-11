@@ -2,8 +2,9 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useUserProfile } from '@/firebase';
+import { THEMES } from '@/lib/themes';
 
-export type Theme = "default" | "void" | "bright" | "crimson" | "jade";
+export type Theme = (typeof THEMES)[number]['id'];
 
 interface ThemeContextType {
   theme: Theme;
@@ -23,8 +24,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (storedTheme) {
       setThemeState(storedTheme);
     }
-    // We consider the theme loaded from local storage initially.
-    // The FOUC is prevented by the script in RootLayout.
     setIsThemeLoaded(true); 
   }, []);
   
@@ -44,28 +43,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isThemeLoaded) return; 
 
+    const themeInfo = THEMES.find(t => t.id === theme) || THEMES.find(t => t.id === 'default');
     const root = document.documentElement;
-    const themeClasses = ['dark', 'theme-void', 'theme-bright', 'theme-crimson', 'theme-jade'];
-    root.classList.remove(...themeClasses);
 
-    switch (theme) {
-      case 'void':
-        root.classList.add('dark', 'theme-void');
-        break;
-      case 'bright':
-        root.classList.add('theme-bright');
-        break;
-      case 'crimson':
-        root.classList.add('dark', 'theme-crimson');
-        break;
-      case 'jade':
-        root.classList.add('theme-jade');
-        break;
-      case 'default':
-      default:
+    const allThemeClasses = THEMES.map(t => 'theme-' + t.id);
+    root.classList.remove('dark', ...allThemeClasses);
+
+    if (themeInfo) {
+      if (themeInfo.isDark) {
         root.classList.add('dark');
-        break;
+      }
+      root.classList.add(`theme-${themeInfo.id}`);
+    } else {
+        root.classList.add('dark');
     }
+
   }, [theme, isThemeLoaded]);
 
   return (
