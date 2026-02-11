@@ -6,6 +6,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetTrigger,
+  SheetClose,
 } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -54,7 +56,6 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription as DialogDesc,
-  DialogFooter,
   DialogHeader as DialogHeaderComponent,
   DialogTitle as DialogTitleComponent,
   DialogTrigger,
