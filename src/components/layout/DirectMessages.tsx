@@ -88,7 +88,7 @@ export default function DirectMessages() {
   const onlineContacts = friends?.filter((c) => c.userProfile.status === 'Online') || [];
 
   return (
-    <div className="flex h-screen w-full bg-background text-foreground">
+    <div className="flex flex-1 w-full bg-background text-foreground overflow-hidden">
       <div className="w-full flex-shrink-0 border-r border-border/50 bg-secondary/30 flex flex-col md:w-80">
         <div className="p-4 pb-0">
             <div className="relative">

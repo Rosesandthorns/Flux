@@ -19,29 +19,13 @@ import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
 import AddServerDialog from '../servers/AddServerDialog';
 
-const ServerButton = ({ children, tooltip }: { children: React.ReactNode; tooltip: string; }) => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <button
-        className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground transition-all duration-300 ease-in-out hover:bg-primary"
-      >
-        {children}
-      </button>
-    </TooltipTrigger>
-    <TooltipContent side="top">
-      <p>{tooltip}</p>
-    </TooltipContent>
-  </Tooltip>
-);
-
 export default function ServerRail({ activeServerId }: { activeServerId?: string }) {
     const { servers, loading } = useUserServers();
     
     return (
     <TooltipProvider delayDuration={0}>
-        <div className="group fixed inset-x-0 bottom-0 z-[60] flex h-24 items-end justify-center pointer-events-none md:pointer-events-auto md:relative md:inset-auto md:h-screen md:w-20 md:flex-col md:items-center md:justify-start md:bg-secondary/30 md:py-4 md:border-r md:border-border/50">
-            <nav className="mb-4 transform-gpu transition-all duration-300 ease-in-out opacity-0 translate-y-8 group-hover:opacity-100 group-hover:translate-y-0 pointer-events-auto md:transform-none md:opacity-100 md:flex md:flex-col md:gap-3 md:h-full">
-                <div className="flex items-center gap-3 bg-background/50 p-3 backdrop-blur-md rounded-full border border-border/50 shadow-lg md:flex-col md:bg-transparent md:p-0 md:backdrop-blur-none md:rounded-none md:border-none md:shadow-none">
+        <div className="flex h-24 items-center justify-center bg-secondary/30 px-4 border-t border-border/50 shrink-0">
+            <nav className="flex items-center gap-3 p-2 rounded-full bg-background/50 shadow-lg backdrop-blur-md border border-border/50">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Link
@@ -54,17 +38,17 @@ export default function ServerRail({ activeServerId }: { activeServerId?: string
                                 <Home className="h-6 w-6" />
                             </Link>
                         </TooltipTrigger>
-                        <TooltipContent side="right">
+                        <TooltipContent side="top">
                             <p>Direct Messages</p>
                         </TooltipContent>
                     </Tooltip>
-                    <div className="h-8 w-[2px] bg-border md:h-[2px] md:w-8" />
-                    <ScrollArea className="flex gap-3 overflow-x-auto no-scrollbar max-w-[10.5rem] md:max-w-none md:flex-col md:overflow-y-auto">
-                        <div className="flex gap-3 md:flex-col">
+                    <div className="h-8 w-[2px] bg-border" />
+                    <ScrollArea className="overflow-x-auto no-scrollbar">
+                         <div className="flex gap-3 pr-2">
                             {loading ? (
                                 <>
-                                    <Skeleton className="h-12 w-12 rounded-full" />
-                                    <Skeleton className="h-12 w-12 rounded-full" />
+                                    <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
+                                    <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
                                 </>
                             ) : servers.map((server) => (
                             <Tooltip key={server.id}>
@@ -82,7 +66,7 @@ export default function ServerRail({ activeServerId }: { activeServerId?: string
                                     />
                                 </Link>
                                 </TooltipTrigger>
-                                <TooltipContent side="right">
+                                <TooltipContent side="top">
                                 <p>{server.name}</p>
                                 </TooltipContent>
                             </Tooltip>
@@ -98,7 +82,7 @@ export default function ServerRail({ activeServerId }: { activeServerId?: string
                                     <Plus className="h-6 w-6" />
                                 </button>
                             </TooltipTrigger>
-                            <TooltipContent side="right">
+                            <TooltipContent side="top">
                                 <p>Add a Server</p>
                             </TooltipContent>
                         </Tooltip>
@@ -114,7 +98,7 @@ export default function ServerRail({ activeServerId }: { activeServerId?: string
                                     </button>
                                 </SheetTrigger>
                             </TooltipTrigger>
-                            <TooltipContent side="right">
+                            <TooltipContent side="top">
                                 <p>Explore Servers</p>
                             </TooltipContent>
                         </Tooltip>
@@ -130,7 +114,6 @@ export default function ServerRail({ activeServerId }: { activeServerId?: string
                             </ScrollArea>
                         </SheetContent>
                     </Sheet>
-                </div>
             </nav>
         </div>
     </TooltipProvider>

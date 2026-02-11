@@ -12,10 +12,12 @@ interface ServerLayoutProps {
 
 export default function ServerLayout({ children, params }: ServerLayoutProps) {
     return (
-        <div vaul-drawer-wrapper="" className="h-screen w-full flex">
+        <div vaul-drawer-wrapper="" className="h-screen w-full flex flex-col">
+            <div className="flex flex-1 overflow-hidden">
+                <ChannelSidebar serverId={params.serverId} />
+                {children}
+            </div>
             <ServerRail activeServerId={params.serverId} />
-            <ChannelSidebar serverId={params.serverId} />
-            {children}
         </div>
     )
 }
