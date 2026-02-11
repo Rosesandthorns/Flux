@@ -5,14 +5,6 @@ import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
     Sheet,
     SheetContent,
     SheetHeader,
@@ -77,7 +69,7 @@ export default function ServerRail() {
                         </SheetContent>
                     </Sheet>
                     <div className="h-8 w-[2px] bg-border" />
-                    {servers.map((server, index) => (
+                    {servers.map((server) => (
                     <Tooltip key={server.id}>
                         <TooltipTrigger asChild>
                         <button className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full">
@@ -99,33 +91,33 @@ export default function ServerRail() {
                     <ServerButton tooltip="Add a Server">
                         <Plus className="h-6 w-6" />
                     </ServerButton>
-                    <Dialog>
+                    <Sheet>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <DialogTrigger asChild>
+                                <SheetTrigger asChild>
                                     <button
                                     className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground transition-all duration-300 ease-in-out hover:bg-primary"
                                     >
                                     <Compass className="h-6 w-6" />
                                     </button>
-                                </DialogTrigger>
+                                </SheetTrigger>
                             </TooltipTrigger>
                             <TooltipContent side="top">
                                 <p>Explore Servers</p>
                             </TooltipContent>
                         </Tooltip>
-                        <DialogContent className="max-w-4xl h-3/4 flex flex-col">
-                           <DialogHeader>
-                                <DialogTitle>Explore Public Servers</DialogTitle>
-                                <DialogDescription>Find your next community. Here are some popular servers to get you started.</DialogDescription>
-                            </DialogHeader>
-                            <ScrollArea className="flex-1 -mx-6">
+                        <SheetContent side="top" className="h-screen w-screen p-6 flex flex-col">
+                           <SheetHeader className="text-center">
+                                <SheetTitle>Explore Public Servers</SheetTitle>
+                                <SheetDescription>Find your next community. Here are some popular servers to get you started.</SheetDescription>
+                            </SheetHeader>
+                            <ScrollArea className="flex-1 -mx-6 mt-4">
                                 <div className="px-6">
                                     <ExploreServers />
                                 </div>
                             </ScrollArea>
-                        </DialogContent>
-                    </Dialog>
+                        </SheetContent>
+                    </Sheet>
                 </div>
             </nav>
         </div>
