@@ -16,7 +16,7 @@ import { useFriends, useFriendRequests } from './friends/hooks';
 import { useMessages } from './messages/hooks';
 import { sendMessage, editMessage, deleteMessage } from './messages/actions';
 import type { Message } from './messages/types';
-import { createServer, joinServer, sendServerMessage, createChannel, leaveServer, updateChannel, editServerMessage, deleteServerMessage, togglePinServerMessage, updateUserRole, kickServerMember } from './servers/actions';
+import { createServer, joinServer, sendServerMessage, createChannel, leaveServer, updateChannel, editServerMessage, deleteServerMessage, togglePinServerMessage, updateUserRole, kickServerMember, deleteChannel } from './servers/actions';
 import { useUserServers, useServer, useServerChannels, useServerMessages, useServerMember, useChannelParticipants, useServerMembers } from './servers/hooks';
 
 function initializeFirebase(): { app: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null; } {
@@ -77,5 +77,6 @@ export {
   updateUserRole,
   deleteUserDocument,
   kickServerMember,
+  deleteChannel,
 };
 export type { Message };

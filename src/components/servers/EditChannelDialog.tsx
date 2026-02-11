@@ -10,14 +10,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { updateChannel, useFirestore } from '@/firebase';
+import { updateChannel, useFirestore, deleteChannel } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import type { Channel } from '@/firebase/servers/types';
 import { Slider } from '../ui/slider';
+import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 interface EditChannelDialogProps {
   serverId: string;
@@ -31,8 +44,10 @@ export default function EditChannelDialog({ serverId, channel, children }: EditC
     const [channelTopic, setChannelTopic] = useState(channel.topic || '');
     const [userAccess, setUserAccess] = useState<'readwrite' | 'readonly' | 'none'>(channel.userAccess || 'readwrite');
     const [isLoading, setIsLoading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const { toast } = useToast();
     const firestore = useFirestore();
+    const router = useRouter();
 
     useEffect(() => {
         if (open) {
@@ -84,6 +99,29 @@ export default function EditChannelDialog({ serverId, channel, children }: EditC
         }
     };
     
+    const handleDeleteChannel = async () => {
+        if (!firestore || !serverId || !channel.id) return;
+
+        setIsDeleting(true);
+        try {
+            await deleteChannel(firestore, serverId, channel.id);
+            toast({
+                title: 'Channel Deleted',
+                description: `The channel #${channel.name} and all its messages have been permanently deleted.`,
+            });
+            setOpen(false);
+            router.push(`/channels/${serverId}`);
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error deleting channel',
+                description: 'Could not delete the channel. Please try again.',
+            });
+        } finally {
+            setIsDeleting(false);
+        }
+    }
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
@@ -126,12 +164,35 @@ export default function EditChannelDialog({ serverId, channel, children }: EditC
                         />
                     </div>
 
-                    <DialogFooter>
-                        <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button type="submit" disabled={isLoading || !channelName}>
-                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Changes
-                        </Button>
+                    <DialogFooter className="sm:justify-between">
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button type="button" variant="destructive" disabled={isLoading}>Delete Channel</Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete the
+                                        <span className="font-bold"> #{channel.name}</span> channel and all of its messages.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteChannel} disabled={isDeleting} className={cn(buttonVariants({ variant: "destructive" }))}>
+                                        {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Continue
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                        <div className="flex gap-2">
+                            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+                            <Button type="submit" disabled={isLoading || !channelName}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Changes
+                            </Button>
+                        </div>
                     </DialogFooter>
                  </form>
             </DialogContent>

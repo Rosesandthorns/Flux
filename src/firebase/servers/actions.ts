@@ -230,6 +230,30 @@ export const updateChannel = (
     });
 }
 
+export async function deleteChannel(firestore: Firestore, serverId: string, channelId: string) {
+    const batch = writeBatch(firestore);
+
+    const messagesRef = collection(firestore, `servers/${serverId}/channels/${channelId}/messages`);
+    const messagesSnapshot = await getDocs(messagesRef);
+    messagesSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const participantsRef = collection(firestore, `servers/${serverId}/channels/${channelId}/participants`);
+    const participantsSnapshot = await getDocs(participantsRef);
+    participantsSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const channelRef = doc(firestore, `servers/${serverId}/channels/${channelId}`);
+    batch.delete(channelRef);
+
+    return batch.commit().catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: channelRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+}
+
 export async function leaveServer(firestore: Firestore, serverId: string, userId: string) {
     const memberRef = doc(firestore, `servers/${serverId}/members/${userId}`);
     // You might want to add checks here, e.g., an owner can't leave unless they transfer ownership.
