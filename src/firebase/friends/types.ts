@@ -24,3 +24,9 @@ export interface FriendWithProfile {
   userProfile: UserProfile;
   friendshipCreatedAt: Timestamp;
 }
+
+export interface BlockedUser {
+    id?: string; // This is the blocked user's ID
+    userId: string;
+    createdAt: Timestamp;
+}

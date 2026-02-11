@@ -98,6 +98,22 @@
       },
       "required": ["userId", "createdAt"]
     },
+    "blockedUser": {
+      "title": "Blocked User",
+      "description": "Represents a user blocked by another user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the blocked user."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the user was blocked."
+        }
+      },
+      "required": ["userId", "createdAt"]
+    },
     "friendRequest": {
       "title": "Friend Request",
       "description": "Represents a friend request sent from one user to another.",
@@ -327,6 +343,12 @@
         "$ref": "#/entities/friend"
       },
       "description": "A subcollection storing the user's friends."
+    },
+     "/users/{userId}/blockedUsers/{blockedUserId}": {
+      "schema": {
+        "$ref": "#/entities/blockedUser"
+      },
+      "description": "A subcollection storing the users blocked by this user."
     },
     "/friendRequests/{requestId}": {
       "schema": {

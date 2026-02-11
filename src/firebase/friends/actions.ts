@@ -12,6 +12,7 @@ import {
   doc,
   deleteDoc,
   getDoc,
+  setDoc,
 } from 'firebase/firestore';
 
 // Function to find user by handle
@@ -93,4 +94,53 @@ export async function acceptFriendRequest(firestore: Firestore, requestId: strin
 export async function declineOrCancelFriendRequest(firestore: Firestore, requestId: string) {
     const requestRef = doc(firestore, 'friendRequests', requestId);
     await deleteDoc(requestRef);
+}
+
+export async function removeFriend(firestore: Firestore, currentUserId: string, friendId: string) {
+    const batch = writeBatch(firestore);
+
+    const friendRef1 = doc(firestore, `users/${currentUserId}/friends/${friendId}`);
+    batch.delete(friendRef1);
+    
+    const friendRef2 = doc(firestore, `users/${friendId}/friends/${currentUserId}`);
+    batch.delete(friendRef2);
+
+    await batch.commit();
+}
+
+
+export async function blockUser(firestore: Firestore, currentUserId: string, targetUserId: string) {
+    const batch = writeBatch(firestore);
+
+    // 1. Add to block list
+    const blockRef = doc(firestore, `users/${currentUserId}/blockedUsers/${targetUserId}`);
+    batch.set(blockRef, { userId: targetUserId, createdAt: serverTimestamp() });
+
+    // 2. Remove friendship if it exists
+    const friendRef1 = doc(firestore, `users/${currentUserId}/friends/${targetUserId}`);
+    batch.delete(friendRef1);
+    const friendRef2 = doc(firestore, `users/${targetUserId}/friends/${currentUserId}`);
+    batch.delete(friendRef2);
+    
+    // 3. Query for and then delete any pending friend requests between them
+    const requestsRef = collection(firestore, 'friendRequests');
+    const q1 = query(requestsRef, where('fromUserId', '==', currentUserId), where('toUserId', '==', targetUserId));
+    const q2 = query(requestsRef, where('fromUserId', '==', targetUserId), where('toUserId', '==', currentUserId));
+    
+    try {
+        const [snapshot1, snapshot2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+        snapshot1.docs.forEach(doc => batch.delete(doc.ref));
+        snapshot2.docs.forEach(doc => batch.delete(doc.ref));
+
+        await batch.commit();
+    } catch(e) {
+        // Handle potential errors during query or commit
+        console.error("Error blocking user:", e);
+        throw new Error("Could not block user.");
+    }
+}
+
+export async function unblockUser(firestore: Firestore, currentUserId: string, targetUserId: string) {
+    const blockRef = doc(firestore, `users/${currentUserId}/blockedUsers/${targetUserId}`);
+    await deleteDoc(blockRef);
 }

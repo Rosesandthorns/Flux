@@ -5,6 +5,7 @@ import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, type Query, doc, onSnapshot, getDoc, type DocumentReference, limit } from 'firebase/firestore';
 import type { Server, Channel, ServerMember, ServerMessage, VoiceParticipant } from './types';
 import type { UserProfile } from '../auth/users';
+import { useBlock } from '@/context/BlockContext';
 
 
 // Hook to get all servers a user is a member of
@@ -90,6 +91,7 @@ export function useServerChannels(serverId: string) {
 // Hook to get messages from a server channel
 export function useServerMessages(serverId: string, channelId: string) {
   const firestore = useFirestore();
+  const { blockedUserIds } = useBlock();
 
   const messagesQuery = useMemo(() => {
     if (!firestore || !serverId || !channelId) return null;
@@ -102,7 +104,10 @@ export function useServerMessages(serverId: string, channelId: string) {
 
   const { data, loading, error } = useCollection<ServerMessage>(messagesQuery);
   
-  const messages = useMemo(() => data?.slice().reverse() ?? [], [data]);
+  const messages = useMemo(() => {
+    if (!data) return [];
+    return data.slice().reverse().filter(msg => !blockedUserIds.has(msg.authorId));
+  }, [data, blockedUserIds]);
 
   return { messages, loading, error };
 }

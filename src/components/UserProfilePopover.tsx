@@ -3,14 +3,20 @@
 import {
   Sheet,
   SheetContent,
-  SheetTrigger,
-  SheetClose,
   SheetHeader,
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X } from 'lucide-react';
+import {
+  X,
+  Loader2,
+  Ban,
+  UserPlus,
+  UserX,
+  MessageSquare,
+  ShieldQuestion,
+} from 'lucide-react';
 import {
   useDoc,
   useFirestore,
@@ -19,6 +25,14 @@ import {
   useUserProfile,
   updateUserSettings,
   deleteUserDocument,
+  useUser,
+  useFriends,
+  useFriendRequests,
+  blockUser,
+  unblockUser,
+  removeFriend,
+  sendFriendRequest,
+  declineOrCancelFriendRequest,
 } from '@/firebase';
 import type { UserProfile } from '@/firebase/auth/users';
 import type { ServerMember, ServerRole } from '@/firebase/servers/types';
@@ -32,7 +46,6 @@ import {
   SelectValue,
 } from './ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { doc, DocumentReference, serverTimestamp } from 'firebase/firestore';
 import { Button } from './ui/button';
@@ -55,7 +68,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from './ui/alert-dialog';
 import {
   Form,
@@ -71,6 +83,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { add, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useBlock } from '@/context/BlockContext';
+import { useRouter } from 'next/navigation';
 
 interface UserProfilePopoverProps {
   children: React.ReactNode;
@@ -102,17 +116,24 @@ export default function UserProfilePopover({
   currentUserMember,
 }: UserProfilePopoverProps) {
   const firestore = useFirestore();
+  const router = useRouter();
   const { toast } = useToast();
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
   const [isUpdatingGlobalStatus, setIsUpdatingGlobalStatus] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
 
   const [isAdminEditDialogOpen, setIsAdminEditDialogOpen] = useState(false);
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
 
+  const { user: currentUser } = useUser();
   const { data: currentUserProfile } = useUserProfile();
+  const { blockedUserIds } = useBlock();
+
+  const { data: friends } = useFriends();
+  const { data: friendRequests } = useFriendRequests();
 
   const userProfileRef = useMemo(() => {
     if (!firestore || !userId) return null;
@@ -149,7 +170,12 @@ export default function UserProfilePopover({
   const isGlobalAdmin = isGlobalOwner || currentUserProfile?.status === 'admin';
 
   // Authorization checks
-  const isSelf = currentUserProfile?.id === userId;
+  const isSelf = currentUser?.uid === userId;
+
+  // Relationship status
+  const isBlocked = blockedUserIds.has(userId);
+  const isFriend = useMemo(() => friends?.some(f => f.id === userId), [friends, userId]);
+  const incomingFriendRequest = useMemo(() => friendRequests?.find(req => req.fromUserId === userId), [friendRequests, userId]);
 
   const canModerateRoles = useMemo(() => {
     if (!currentUserMember || !member || isSelf) return false;
@@ -200,6 +226,66 @@ export default function UserProfilePopover({
       setIsUpdatingRole(false);
     }
   };
+  
+  const handleBlock = async () => {
+    if (!firestore || !currentUser) return;
+    setIsProcessingAction(true);
+    try {
+      await blockUser(firestore, currentUser.uid, userId);
+      toast({ title: 'User Blocked', description: `You will no longer see messages from ${userProfile?.displayName}.`});
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: 'Error', description: e.message });
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  const handleUnblock = async () => {
+    if (!firestore || !currentUser) return;
+    setIsProcessingAction(true);
+    try {
+      await unblockUser(firestore, currentUser.uid, userId);
+      toast({ title: 'User Unblocked' });
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: 'Error', description: e.message });
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  const handleAddFriend = async () => {
+      if (!firestore || !currentUser || !userProfile) return;
+      setIsProcessingAction(true);
+      try {
+          await sendFriendRequest(firestore, currentUser.uid, userProfile.handle);
+          toast({ title: 'Friend Request Sent!' });
+      } catch (e: any) {
+          toast({ variant: 'destructive', title: 'Error', description: e.message });
+      } finally {
+          setIsProcessingAction(false);
+      }
+  };
+
+  const handleRemoveFriend = async () => {
+      if (!firestore || !currentUser) return;
+      setIsProcessingAction(true);
+      try {
+          await removeFriend(firestore, currentUser.uid, userId);
+          toast({ title: 'Friend Removed' });
+      } catch(e: any) {
+          toast({ variant: 'destructive', title: 'Error', description: e.message });
+      } finally {
+          setIsProcessingAction(false);
+      }
+  };
+
+  const handleMessage = () => {
+    setIsOpen(false);
+    if (window.location.pathname !== "/") {
+        router.push('/');
+    }
+  }
+
 
   const handleGlobalStatusChange = async (newStatus: 'admin' | 'user') => {
     if (!firestore || !canChangeGlobalStatus) return;
@@ -287,6 +373,7 @@ export default function UserProfilePopover({
         description: `${userProfile.displayName}'s profile has been deleted.`,
       });
       setIsDeleteUserDialogOpen(false);
+      setIsOpen(false);
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -303,6 +390,18 @@ export default function UserProfilePopover({
     rolesThatCanBeAssigned.unshift('admin');
   }
 
+  const renderFriendshipButton = () => {
+    if (isBlocked || isSelf) return null;
+
+    if (isFriend) {
+        return <Button variant="ghost" size="icon" onClick={handleRemoveFriend} disabled={isProcessingAction}><UserX className="h-5 w-5"/></Button>;
+    }
+    if (incomingFriendRequest) {
+        return <Button variant="ghost" size="icon" disabled><ShieldQuestion className="h-5 w-5 text-amber-500"/></Button>;
+    }
+    return <Button variant="ghost" size="icon" onClick={handleAddFriend} disabled={isProcessingAction}><UserPlus className="h-5 w-5"/></Button>;
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild onClick={(e) => { e.stopPropagation(); }}>
@@ -310,7 +409,7 @@ export default function UserProfilePopover({
       </SheetTrigger>
       <SheetContent
         side="top"
-        className="h-screen w-screen p-0 border-none bg-background/80 backdrop-blur-sm"
+        className="h-screen w-screen p-0 border-none bg-background/80 backdrop-blur-sm z-[150]"
         onPointerDownOutside={(e) => {
           const target = e.target as HTMLElement;
           if (
@@ -322,10 +421,8 @@ export default function UserProfilePopover({
         }}
       >
         <SheetHeader className="sr-only">
-          <SheetTitle>User Profile</SheetTitle>
-          <SheetDescription>
-            {`Profile for ${userProfile?.displayName || 'user'}. View details or manage roles.`}
-          </SheetDescription>
+            <SheetTitle>User Profile</SheetTitle>
+            <SheetDescription>{`Profile for ${userProfile?.displayName || 'user'}. View details or manage roles.`}</SheetDescription>
         </SheetHeader>
         <div className="absolute top-4 right-4 z-20">
           <SheetClose asChild>
@@ -354,6 +451,13 @@ export default function UserProfilePopover({
             ) : userProfile ? (
               <div className="flex flex-col bg-card rounded-lg shadow-2xl">
                 <div className="relative h-24 w-full bg-primary/20">
+                   {!isSelf && (
+                     <div className="absolute top-2 right-2 flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={handleMessage} disabled={isProcessingAction || isBlocked}><MessageSquare className="h-5 w-5"/></Button>
+                        {renderFriendshipButton()}
+                        <Button variant="ghost" size="icon" onClick={isBlocked ? handleUnblock : handleBlock} disabled={isProcessingAction}><Ban className={cn("h-5 w-5", isBlocked && "text-red-500 fill-red-500/20")}/></Button>
+                     </div>
+                   )}
                   <Avatar className="absolute bottom-0 left-4 h-24 w-24 translate-y-1/2 border-4 border-card rounded-full">
                     {userProfile.photoURL && (
                       <AvatarImage
@@ -375,6 +479,12 @@ export default function UserProfilePopover({
                       {userProfile.handle}
                     </p>
                   </div>
+                  
+                  {isBlocked && (
+                     <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-destructive-foreground">
+                        <p className="font-semibold text-sm">This user is blocked.</p>
+                     </div>
+                  )}
 
                   {serverId && member && (
                     <>
@@ -467,7 +577,7 @@ export default function UserProfilePopover({
                                 Edit {userProfile.displayName}'s Profile
                               </DialogTitleComponent>
                               <DialogDesc>
-                                Make changes to your profile here. Click save
+                                Make changes to this profile here. Click save
                                 when you're done.
                               </DialogDesc>
                             </DialogHeaderComponent>
@@ -484,7 +594,7 @@ export default function UserProfilePopover({
                                       <FormLabel>Display Name</FormLabel>
                                       <FormControl>
                                         <Input
-                                          placeholder="Your display name"
+                                          placeholder="User's display name"
                                           {...field}
                                           disabled={
                                             !canUpdateUsername || isSaving
@@ -504,7 +614,7 @@ export default function UserProfilePopover({
                                       <FormControl>
                                         <div className="relative">
                                           <Input
-                                            placeholder="your_handle"
+                                            placeholder="user_handle"
                                             {...field}
                                             className="pr-[5.5rem]"
                                             disabled={
@@ -522,8 +632,8 @@ export default function UserProfilePopover({
                                 />
                                 {!canUpdateUsername && nextUpdateDate && (
                                   <p className="text-sm text-muted-foreground">
-                                    You can change your display name and handle
-                                    again{' '}
+                                    This user's display name and handle can be
+                                    changed again{' '}
                                     {formatDistanceToNow(nextUpdateDate, {
                                       addSuffix: true,
                                     })}

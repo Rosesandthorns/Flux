@@ -11,7 +11,7 @@ import { useDoc } from './firestore/use-doc';
 import { useUserProfile } from './auth/use-user-profile';
 import { updateUserSettings } from './auth/settings';
 import { deleteUserDocument } from './auth/users';
-import { sendFriendRequest, acceptFriendRequest, declineOrCancelFriendRequest } from './friends/actions';
+import { sendFriendRequest, acceptFriendRequest, declineOrCancelFriendRequest, blockUser, unblockUser, removeFriend } from './friends/actions';
 import { useFriends, useFriendRequests } from './friends/hooks';
 import { useMessages } from './messages/hooks';
 import { sendMessage, editMessage, deleteMessage } from './messages/actions';
@@ -81,5 +81,8 @@ export {
   updateServer,
   deleteServer,
   transferServerOwnership,
+  blockUser,
+  unblockUser,
+  removeFriend,
 };
 export type { Message };

@@ -4,9 +4,11 @@ import { useCollection } from '../firestore/use-collection';
 import { collection, query, orderBy, limit, type Query } from 'firebase/firestore';
 import { useMemo } from 'react';
 import type { Message } from './types';
+import { useBlock } from '@/context/BlockContext';
 
 export function useMessages(conversationId: string | null) {
   const firestore = useFirestore();
+  const { blockedUserIds } = useBlock();
 
   const messagesQuery = useMemo(() => {
     if (!firestore || !conversationId) return null;
@@ -21,7 +23,10 @@ export function useMessages(conversationId: string | null) {
   
   // The data is fetched in descending order for query efficiency (getting latest),
   // but we want to display it in ascending order.
-  const messages = useMemo(() => data?.slice().reverse() ?? [], [data]);
+  const messages = useMemo(() => {
+    if (!data) return [];
+    return data.slice().reverse().filter(msg => !blockedUserIds.has(msg.authorId));
+  }, [data, blockedUserIds]);
 
   return { messages, loading, error };
 }

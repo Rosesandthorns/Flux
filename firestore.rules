@@ -36,6 +36,16 @@ service cloud.firestore {
     function isServerAdmin(serverId) {
       return isServerRole(serverId, ['owner', 'admin']);
     }
+    
+    function isBlocked(uid1, uid2) {
+      return exists(/databases/$(database)/documents/users/$(uid1)/blockedUsers/$(uid2)) || exists(/databases/$(database)/documents/users/$(uid2)/blockedUsers/$(uid1));
+    }
+    
+    function getOtherUid(conversationId) {
+      let uids = conversationId.split('_');
+      return uids[0] == request.auth.uid ? uids[1] : uids[0];
+    }
+
 
     function canReadChannelContent(serverId, channelId) {
       if (!isProperMember(serverId)) {
@@ -72,21 +82,28 @@ service cloud.firestore {
       allow read: if request.auth.uid == userId;
       allow write: if request.auth != null;
     }
+    
+    match /users/{userId}/blockedUsers/{blockedUserId} {
+        allow read, write: if request.auth.uid == userId;
+    }
 
     match /friendRequests/{requestId} {
       allow read: if request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId;
       allow create: if request.auth.uid == request.resource.data.fromUserId 
                     && request.resource.data.status == 'pending'
-                    && request.resource.data.fromUserId != request.resource.data.toUserId;
+                    && request.resource.data.fromUserId != request.resource.data.toUserId
+                    && !isBlocked(request.resource.data.fromUserId, request.resource.data.toUserId);
       allow delete: if request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId;
     }
 
     match /dms/{conversationId} {
-      allow read, write: if request.auth.uid in conversationId.split('_');
+      allow read, write: if request.auth.uid in conversationId.split('_') && !isBlocked(request.auth.uid, getOtherUid(conversationId));
 
       match /messages/{messageId} {
-        allow read: if request.auth.uid in conversationId.split('_');
-        allow create: if request.auth.uid in conversationId.split('_') && request.auth.uid == request.resource.data.authorId;
+        allow read: if request.auth.uid in conversationId.split('_') && !isBlocked(request.auth.uid, getOtherUid(conversationId));
+        allow create: if request.auth.uid in conversationId.split('_') 
+                      && request.auth.uid == request.resource.data.authorId 
+                      && !isBlocked(request.auth.uid, getOtherUid(conversationId));
         allow update: if request.auth.uid == resource.data.authorId;
         allow delete: if request.auth.uid == resource.data.authorId || isGlobalAdmin();
       }
