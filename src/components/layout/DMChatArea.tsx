@@ -1,6 +1,6 @@
 'use client';
 
-import { Paperclip, Smile, AtSign, Phone, Send, Loader2, Pencil, Trash2, X } from 'lucide-react';
+import { Paperclip, Smile, AtSign, Phone, Send, Loader2, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -43,6 +43,7 @@ import Image from 'next/image';
 
 interface DMChatAreaProps {
     contact: FriendWithProfile;
+    onBack?: () => void;
 }
 
 const messageFormSchema = z.object({
@@ -53,7 +54,7 @@ const editFormSchema = z.object({
   text: z.string().min(1, "Message cannot be empty.").max(2000),
 });
 
-export default function DMChatArea({ contact }: DMChatAreaProps) {
+export default function DMChatArea({ contact, onBack }: DMChatAreaProps) {
     const { user } = useUser();
     const { data: userProfile } = useUserProfile();
     const firestore = useFirestore();
@@ -202,10 +203,19 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <header className="hidden h-12 shrink-0 items-center border-b border-border/50 px-4 md:flex">
+      <header className="flex h-12 shrink-0 items-center border-b border-border/50 px-2 md:px-4">
+        {onBack && (
+            <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={onBack}>
+                <ArrowLeft className="h-5 w-5" />
+            </Button>
+        )}
         <UserProfilePopover userId={contact.id}>
             <div className="flex items-center cursor-pointer rounded-md -ml-2 p-2 hover:bg-accent">
-                <AtSign className="h-6 w-6 text-muted-foreground" />
+                <AtSign className="h-6 w-6 text-muted-foreground hidden md:block" />
+                 <Avatar className="h-8 w-8 md:hidden">
+                    <AvatarImage src={contactProfile?.photoURL} alt={contactProfile?.displayName} />
+                    <AvatarFallback>{contactProfile?.displayName?.charAt(0)}</AvatarFallback>
+                </Avatar>
                 <h2 className="ml-2 text-lg font-semibold">{contactProfile?.displayName || contact.userProfile.displayName}</h2>
             </div>
         </UserProfilePopover>
