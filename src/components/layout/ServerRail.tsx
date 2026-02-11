@@ -45,7 +45,7 @@ const ServerButton = ({ children, tooltip }: { children: React.ReactNode; toolti
 export default function ServerRail() {
     return (
     <TooltipProvider delayDuration={0}>
-        <div className="group fixed inset-x-0 bottom-0 z-50 flex h-24 items-end justify-center pointer-events-none">
+        <div className="group fixed inset-x-0 bottom-0 z-60 flex h-24 items-end justify-center pointer-events-none">
             <nav className="mb-4 transform-gpu transition-all duration-300 ease-in-out opacity-0 translate-y-8 group-hover:opacity-100 group-hover:translate-y-0 pointer-events-auto">
                 <div className="flex items-center space-x-3 bg-background/50 p-3 backdrop-blur-md rounded-full border border-border/50 shadow-lg">
                     <Sheet>
@@ -89,7 +89,7 @@ export default function ServerRail() {
                         </button>
                         </TooltipTrigger>
                         <TooltipContent side="top">
-                        <p>Server {index + 1}</p>
+                        <p>{server.description}</p>
                         </TooltipContent>
                     </Tooltip>
                     ))}

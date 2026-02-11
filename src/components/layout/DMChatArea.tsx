@@ -1,4 +1,4 @@
-import { Paperclip, Smile, AtSign } from 'lucide-react';
+import { Paperclip, Smile, AtSign, Phone } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,11 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
         <div className="flex items-center">
           <AtSign className="h-6 w-6 text-muted-foreground" />
           <h2 className="ml-2 text-lg font-semibold">{contact.name}</h2>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+            <Button variant="ghost" size="icon">
+                <Phone className="h-5 w-5" />
+            </Button>
         </div>
       </header>
 

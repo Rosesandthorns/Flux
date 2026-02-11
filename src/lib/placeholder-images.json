@@ -8,19 +8,19 @@
     },
     {
       "id": "server-1",
-      "description": "First server icon",
+      "description": "Server 1",
       "imageUrl": "https://images.unsplash.com/photo-1690683790356-c1edb75e3df7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzZXJ2ZXIlMjBsb2dvfGVufDB8fHx8MTc3MDc2NjcwMXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "server logo"
     },
     {
       "id": "server-2",
-      "description": "Second server icon",
+      "description": "Server 2",
       "imageUrl": "https://images.unsplash.com/photo-1595134334453-46c042d486f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzZXJ2ZXIlMjBsb2dvfGVufDB8fHx8MTc3MDc2NjcwMXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "server logo"
     },
     {
       "id": "server-3",
-      "description": "Third server icon",
+      "description": "Server 3",
       "imageUrl": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhYnN0cmFjdCUyMGFydHxlbnwwfHx8fDE3NzA3MjUyMDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "abstract art"
     },
