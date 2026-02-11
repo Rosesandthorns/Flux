@@ -16,7 +16,7 @@ import {
 import type { User } from 'firebase/auth';
 import { v4 as uuidv4 } from 'uuid';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import type { ServerMessagePayload, Server } from './types';
+import type { ServerMessagePayload, Server, Channel } from './types';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 
@@ -122,4 +122,27 @@ export const sendServerMessage = (
     errorEmitter.emit('permission-error', permissionError);
     throw serverError;
   });
+};
+
+export const createChannel = (
+    firestore: Firestore,
+    serverId: string,
+    channelData: Pick<Channel, 'name' | 'type'>
+) => {
+    const channelsRef = collection(firestore, `servers/${serverId}/channels`);
+    const data = {
+        ...channelData,
+        serverId,
+        topic: ''
+    };
+
+    return addDoc(channelsRef, data).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: channelsRef.path,
+            operation: 'create',
+            requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
 };

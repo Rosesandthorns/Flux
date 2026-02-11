@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from 'react';
 import { ChevronDown, Hash, Mic, Settings, Volume2, Headphones, MicOff, X, Plus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,9 +8,17 @@ import SettingsPage from './SettingsPage';
 import { useVoice } from '@/context/VoiceContext';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useUserProfile, useServer, useServerChannels } from '@/firebase';
+import { useUserProfile, useServer, useServerChannels, useUser, useServerMember } from '@/firebase';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import CreateChannelDialog from '../servers/CreateChannelDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function ChannelSidebar({ serverId }: { serverId: string }) {
   const params = useParams();
@@ -19,6 +26,10 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   
   const { data: server, loading: serverLoading } = useServer(serverId);
   const { channels, loading: channelsLoading } = useServerChannels(serverId);
+  const { user } = useUser();
+  const { data: member } = useServerMember(serverId, user?.uid);
+
+  const canManageServer = member?.role === 'owner' || member?.role === 'admin';
 
   const textChannels = channels?.filter(c => c.type === 'text') || [];
   const voiceChannels = channels?.filter(c => c.type === 'voice') || [];
@@ -42,24 +53,38 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
     <div className="flex h-full w-64 flex-col bg-secondary/30 backdrop-blur-xl shrink-0">
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-border/50 px-4 shadow-sm">
         <h1 className="text-lg font-bold tracking-tight text-primary">{server?.name || 'Server'}</h1>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
-          <ChevronDown className="h-4 w-4" />
-        </Button>
+         <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <ChevronDown className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                {canManageServer && <DropdownMenuItem>Invite People</DropdownMenuItem>}
+                {canManageServer && <DropdownMenuItem>Server Settings</DropdownMenuItem>}
+                {canManageServer && <DropdownMenuSeparator />}
+                <DropdownMenuItem className="text-destructive">Leave Server</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </header>
       <div className="flex-1 overflow-y-auto p-2">
         <div className="space-y-1">
           <div className="flex justify-between items-center px-2">
             <h2 className="text-xs font-bold uppercase text-muted-foreground">Text Channels</h2>
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Create Channel</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            {canManageServer && (
+                <CreateChannelDialog serverId={serverId} channelType='text'>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Create Channel</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </CreateChannelDialog>
+            )}
           </div>
           {textChannels.map((channel) => (
             <Link
@@ -78,16 +103,20 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
         <div className="mt-4 space-y-1">
           <div className="flex justify-between items-center px-2">
             <h2 className="px-2 text-xs font-bold uppercase text-muted-foreground">Voice Channels</h2>
-             <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Create Channel</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            {canManageServer && (
+                 <CreateChannelDialog serverId={serverId} channelType='voice'>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Create Channel</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </CreateChannelDialog>
+            )}
           </div>
           {voiceChannels.map((channel) => (
             <div key={channel.id}>

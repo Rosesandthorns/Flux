@@ -79,7 +79,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
 
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full" ref={scrollAreaRef}>
-          <div className="p-4 space-y-4">
+          <div className="p-4">
              {messagesLoading ? (
                  <div className="flex items-center justify-center h-full">
                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -90,7 +90,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                     const showAuthor = !prevMessage || prevMessage.authorId !== msg.authorId;
                     
                     return (
-                        <div key={msg.id} className={`flex items-start gap-3 ${showAuthor ? 'mt-4' : 'mt-1'}`}>
+                        <div key={msg.id} className={`flex items-start gap-3 ${showAuthor ? 'mt-4' : 'mt-0.5'}`}>
                             <div className="w-10">
                                 {showAuthor && (
                                     <Avatar className="h-10 w-10">

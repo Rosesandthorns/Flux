@@ -57,6 +57,17 @@ export function useServer(serverId: string) {
     return useDoc<Server>(serverRef);
 }
 
+// Hook to get the current user's membership data for a server
+export function useServerMember(serverId: string, userId: string | undefined) {
+    const firestore = useFirestore();
+    const memberRef = useMemo(() => {
+        if (!firestore || !serverId || !userId) return null;
+        return doc(firestore, `servers/${serverId}/members/${userId}`) as DocumentReference<ServerMember>;
+    }, [firestore, serverId, userId]);
+
+    return useDoc<ServerMember>(memberRef);
+}
+
 
 // Hook to get a server's channels
 export function useServerChannels(serverId: string) {
