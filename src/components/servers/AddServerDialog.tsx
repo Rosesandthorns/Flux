@@ -7,6 +7,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -121,7 +122,9 @@ export default function AddServerDialog({ children }: { children: React.ReactNod
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
-            {children}
+            <SheetTrigger asChild>
+                {children}
+            </SheetTrigger>
             <SheetContent side="top" className="h-screen w-screen p-0 flex flex-col bg-background/95 backdrop-blur-sm border-none">
                 <SheetHeader className="pt-12 pb-6 shrink-0 px-4 md:px-8 text-center md:text-left">
                     <SheetTitle className="text-3xl">Add a Server</SheetTitle>

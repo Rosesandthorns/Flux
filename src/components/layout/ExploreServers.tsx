@@ -1,12 +1,15 @@
 "use client";
 
-import { useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
+import { useMemo, useState } from 'react';
+import { useFirestore, useCollection, useUser, joinServer } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { Server } from '@/firebase/servers/types';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function ExploreServers() {
     const firestore = useFirestore();
@@ -16,6 +19,36 @@ export default function ExploreServers() {
     }, [firestore]);
 
     const { data: featuredServers, loading } = useCollection<Server>(serversQuery);
+    const { user } = useUser();
+    const router = useRouter();
+    const { toast } = useToast();
+    const [joiningServerId, setJoiningServerId] = useState<string | null>(null);
+
+    const handleJoin = async (server: Server) => {
+        if (!firestore || !user || !server.id || !server.inviteCode) return;
+        if (joiningServerId) return;
+
+        setJoiningServerId(server.id);
+        try {
+            const joinedServerId = await joinServer(firestore, user, server.inviteCode);
+             if (joinedServerId) {
+                toast({
+                    title: 'Server Joined!',
+                    description: `You have successfully joined ${server.name}.`,
+                });
+                router.push(`/channels/${joinedServerId}`);
+            }
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error joining server',
+                description: error.message,
+            });
+        } finally {
+            setJoiningServerId(null);
+        }
+    };
+
 
     if (loading) {
         return (
@@ -39,9 +72,22 @@ export default function ExploreServers() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {featuredServers.map((server) => {
+        const isJoining = joiningServerId === server.id;
         return (
-          <Card key={server.id} className="overflow-hidden hover:border-primary transition-colors group">
+          <Card 
+            key={server.id} 
+            className={cn(
+                "overflow-hidden hover:border-primary transition-colors group",
+                isJoining ? 'cursor-wait opacity-70' : 'cursor-pointer'
+            )}
+            onClick={() => handleJoin(server)}
+          >
             <div className="relative h-40 w-full">
+              {isJoining && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
+                  <Loader2 className="h-8 w-8 animate-spin text-white" />
+                </div>
+              )}
               {server.iconURL ? (
                 <Image
                   src={server.iconURL}
@@ -57,7 +103,7 @@ export default function ExploreServers() {
             </div>
             <CardHeader>
               <CardTitle>{server.name}</CardTitle>
-              <CardDescription>A featured server you can join.</CardDescription>
+              <CardDescription>Click to join this featured server.</CardDescription>
             </CardHeader>
           </Card>
         );
