@@ -183,7 +183,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
     return (
         <Popover>
             <PopoverTrigger asChild>{children}</PopoverTrigger>
-            <PopoverContent className="w-80 p-0 z-[110]">
+            <PopoverContent className="w-80 p-0 z-[115]">
                 {profileLoading || (serverId && memberLoading) ? (
                     <div className="p-4 space-y-2">
                         <Skeleton className="h-20 w-20 rounded-full" />
