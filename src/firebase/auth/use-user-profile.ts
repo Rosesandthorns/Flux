@@ -2,9 +2,10 @@
 
 import { useUser } from './use-user';
 import { useFirestore } from '../provider';
-import { doc } from 'firebase/firestore';
+import { doc, type DocumentReference } from 'firebase/firestore';
 import { useDoc } from '../firestore/use-doc';
 import { useMemo } from 'react';
+import type { UserProfile } from './users';
 
 export function useUserProfile() {
     const { user } = useUser();
@@ -12,8 +13,8 @@ export function useUserProfile() {
 
     const userDocRef = useMemo(() => {
         if (!user?.uid || !firestore) return null;
-        return doc(firestore, 'users', user.uid);
+        return doc(firestore, 'users', user.uid) as DocumentReference<UserProfile>;
     }, [user?.uid, firestore]);
 
-    return useDoc(userDocRef);
+    return useDoc<UserProfile>(userDocRef);
 }

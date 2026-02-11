@@ -9,6 +9,7 @@ import { useUser } from './auth/use-user';
 import { useCollection } from './firestore/use-collection';
 import { useDoc } from './firestore/use-doc';
 import { useUserProfile } from './auth/use-user-profile';
+import { updateUserSettings } from './auth/settings';
 
 function initializeFirebase(): { app: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null; } {
     if (typeof window === 'undefined') {
@@ -39,4 +40,5 @@ export {
   useCollection,
   useDoc,
   useUserProfile,
+  updateUserSettings,
 };

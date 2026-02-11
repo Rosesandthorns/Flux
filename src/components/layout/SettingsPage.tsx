@@ -11,9 +11,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useTheme, type Theme } from "@/context/ThemeContext";
-import { useAuth, useUserProfile } from "@/firebase";
+import { useAuth, useUserProfile, useFirestore, updateUserSettings } from "@/firebase";
+import type { UserProfile } from "@/firebase/auth/users";
 import { signOut } from "firebase/auth";
 import { Skeleton } from "../ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 type SettingsCategory = "My Account" | "Profiles" | "Privacy & Safety" | "Notifications" | "Keybinds";
 
@@ -37,15 +39,55 @@ export default function SettingsPage() {
     const [activeCategory, setActiveCategory] = useState<SettingsCategory>("My Account");
     const { theme: selectedTheme, setTheme: setSelectedTheme } = useTheme();
     const auth = useAuth();
+    const firestore = useFirestore();
     const { data: userProfile, loading: userProfileLoading } = useUserProfile();
+    const { toast } = useToast();
 
     const handleLogout = async () => {
         if (auth) {
             await signOut(auth);
         }
     };
+    
+    const handleSettingsUpdate = async (settings: Partial<UserProfile> | { [key: string]: any }) => {
+        if (!firestore || !auth?.currentUser) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not save settings.' });
+            return;
+        }
+        try {
+            await updateUserSettings(firestore, auth.currentUser.uid, settings);
+        } catch (error) {
+            if (process.env.NODE_ENV !== 'development') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not save settings.' });
+            }
+        }
+    };
+    
+    const handleThemeChange = (newTheme: Theme) => {
+        setSelectedTheme(newTheme);
+        handleSettingsUpdate({ theme: newTheme });
+    };
 
     const renderContent = () => {
+        if (userProfileLoading) {
+             return (
+                <div>
+                     <h1 className="text-2xl font-bold mb-6"><Skeleton className="h-8 w-48" /></h1>
+                     <Card><CardContent className="p-8"><Skeleton className="h-64 w-full" /></CardContent></Card>
+                </div>
+            )
+        }
+
+        if (!userProfile) {
+            return (
+                 <div>
+                    <h1 className="text-2xl font-bold mb-6">Settings</h1>
+                    <p>Could not load user profile. Please try logging in again.</p>
+                </div>
+            )
+        }
+
+
         switch (activeCategory) {
             case "My Account":
                 return (
@@ -54,18 +96,6 @@ export default function SettingsPage() {
                         <Card className="overflow-hidden">
                             <div className="bg-primary/10 h-24" />
                             <CardContent className="p-4 pt-0">
-                                {userProfileLoading ? (
-                                     <div className="flex justify-between items-end -mt-12">
-                                        <div className="flex items-end gap-4">
-                                            <Skeleton className="h-24 w-24 rounded-full border-4 border-background" />
-                                            <div>
-                                                 <Skeleton className="h-7 w-32 mb-1" />
-                                                 <Skeleton className="h-4 w-40" />
-                                            </div>
-                                        </div>
-                                        <Skeleton className="h-10 w-36" />
-                                    </div>
-                                ) : userProfile && (
                                 <div className="flex justify-between items-end -mt-12">
                                     <div className="flex items-end gap-4">
                                         <Avatar className="h-24 w-24 border-4 border-background rounded-full">
@@ -79,7 +109,6 @@ export default function SettingsPage() {
                                     </div>
                                     <Button>Edit User Profile</Button>
                                 </div>
-                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -95,7 +124,7 @@ export default function SettingsPage() {
                             </CardHeader>
                             <CardContent className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                                 {themes.map(theme => (
-                                    <div key={theme.id} onClick={() => setSelectedTheme(theme.id as Theme)} className="cursor-pointer">
+                                    <div key={theme.id} onClick={() => handleThemeChange(theme.id as Theme)} className="cursor-pointer">
                                         <div className={`relative overflow-hidden rounded-lg border-2 ${selectedTheme === theme.id ? 'border-primary' : 'border-border'}`}>
                                             <div className="p-4 space-y-2">
                                                 <div className="flex gap-2">
@@ -129,7 +158,10 @@ export default function SettingsPage() {
                                 <CardDescription>Control who is able to send you direct messages.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <RadioGroup defaultValue="anyone">
+                                <RadioGroup 
+                                    value={userProfile.privacy.whoCanDm}
+                                    onValueChange={(value) => handleSettingsUpdate({ privacy: { ...userProfile.privacy, whoCanDm: value as any }})}
+                                >
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="anyone" id="dm-anyone" />
                                         <Label htmlFor="dm-anyone">Anyone</Label>
@@ -147,7 +179,10 @@ export default function SettingsPage() {
                                 <CardDescription>Manage who can send you friend requests.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <RadioGroup defaultValue="anyone">
+                                <RadioGroup 
+                                     value={userProfile.privacy.whoCanAdd}
+                                     onValueChange={(value) => handleSettingsUpdate({ privacy: { ...userProfile.privacy, whoCanAdd: value as any }})}
+                                >
                                     <div className="flex items-center space-x-2 mb-2">
                                         <RadioGroupItem value="anyone" id="add-anyone" />
                                         <Label htmlFor="add-anyone">Anyone</Label>
@@ -206,21 +241,33 @@ export default function SettingsPage() {
                                         <Label htmlFor="notif-friend-requests" className="font-semibold">New friend requests</Label>
                                         <p className="text-sm text-muted-foreground">Receive a notification when someone sends you a friend request.</p>
                                     </div>
-                                    <Switch id="notif-friend-requests" defaultChecked />
+                                    <Switch 
+                                        id="notif-friend-requests" 
+                                        checked={userProfile.notifications.friendRequests}
+                                        onCheckedChange={(checked) => handleSettingsUpdate({ notifications: { ...userProfile.notifications, friendRequests: checked } })}
+                                    />
                                 </div>
                                  <div className="flex items-center justify-between">
                                     <div>
                                         <Label htmlFor="notif-mentions" className="font-semibold">New mentions in servers</Label>
                                         <p className="text-sm text-muted-foreground">Get notified when someone @mentions you in a server.</p>
                                     </div>
-                                    <Switch id="notif-mentions" defaultChecked />
+                                    <Switch 
+                                        id="notif-mentions" 
+                                        checked={userProfile.notifications.mentions}
+                                        onCheckedChange={(checked) => handleSettingsUpdate({ notifications: { ...userProfile.notifications, mentions: checked } })}
+                                    />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <Label htmlFor="notif-dms" className="font-semibold">New DMs</Label>
                                         <p className="text-sm text-muted-foreground">Receive a notification for new direct messages.</p>
                                     </div>
-                                    <Switch id="notif-dms" />
+                                    <Switch 
+                                        id="notif-dms"
+                                        checked={userProfile.notifications.dms}
+                                        onCheckedChange={(checked) => handleSettingsUpdate({ notifications: { ...userProfile.notifications, dms: checked } })}
+                                    />
                                 </div>
                             </CardContent>
                         </Card>

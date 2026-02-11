@@ -31,9 +31,51 @@
           "type": "string",
           "description": "The user's status or role.",
           "default": "user"
+        },
+        "theme": {
+          "type": "string",
+          "description": "The user's preferred color theme.",
+          "enum": ["default", "void", "bright", "crimson", "jade"],
+          "default": "default"
+        },
+        "privacy": {
+          "type": "object",
+          "description": "User's privacy settings.",
+          "properties": {
+            "whoCanDm": {
+              "type": "string",
+              "enum": ["anyone", "friends"],
+              "default": "anyone"
+            },
+            "whoCanAdd": {
+              "type": "string",
+              "enum": ["anyone", "mutual", "fof", "none"],
+              "default": "anyone"
+            }
+          },
+          "required": ["whoCanDm", "whoCanAdd"]
+        },
+        "notifications": {
+          "type": "object",
+          "description": "User's notification preferences.",
+          "properties": {
+            "friendRequests": {
+              "type": "boolean",
+              "default": true
+            },
+            "mentions": {
+              "type": "boolean",
+              "default": true
+            },
+            "dms": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": ["friendRequests", "mentions", "dms"]
         }
       },
-      "required": ["handle", "displayName", "email", "createdAt", "status"]
+      "required": ["handle", "displayName", "email", "createdAt", "status", "theme", "privacy", "notifications"]
     }
   },
   "auth": {

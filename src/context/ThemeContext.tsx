@@ -1,25 +1,40 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useUserProfile } from '@/firebase';
 
 export type Theme = "default" | "void" | "bright" | "crimson" | "jade";
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  isThemeLoaded: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("default");
+  const [isThemeLoaded, setIsThemeLoaded] = useState(false);
+  const { data: userProfile, loading: userProfileLoading } = useUserProfile();
 
   useEffect(() => {
     const storedTheme = localStorage.getItem('theme') as Theme | null;
     if (storedTheme) {
       setThemeState(storedTheme);
     }
+    // We consider the theme loaded from local storage initially.
+    // The FOUC is prevented by the script in RootLayout.
+    setIsThemeLoaded(true); 
   }, []);
+  
+  useEffect(() => {
+    if (!userProfileLoading && userProfile?.theme && userProfile.theme !== theme) {
+      setThemeState(userProfile.theme);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile, userProfileLoading]);
+
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
@@ -27,9 +42,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
   
   useEffect(() => {
-    const root = document.documentElement;
+    if (!isThemeLoaded) return; 
 
-    // A list of all theme classes to manage
+    const root = document.documentElement;
     const themeClasses = ['dark', 'theme-void', 'theme-bright', 'theme-crimson', 'theme-jade'];
     root.classList.remove(...themeClasses);
 
@@ -51,10 +66,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         root.classList.add('dark');
         break;
     }
-  }, [theme]);
+  }, [theme, isThemeLoaded]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, isThemeLoaded }}>
       {children}
     </ThemeContext.Provider>
   );
