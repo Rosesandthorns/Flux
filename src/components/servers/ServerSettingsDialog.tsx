@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -10,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -38,11 +35,11 @@ import type { Server } from '@/firebase/servers/types';
 
 interface ServerSettingsDialogProps {
   serverId: string;
-  children: React.ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export default function ServerSettingsDialog({ serverId, children }: ServerSettingsDialogProps) {
-  const [open, setOpen] = useState(false);
+export default function ServerSettingsDialog({ serverId, open, onOpenChange }: ServerSettingsDialogProps) {
   const firestore = useFirestore();
   const { data: server, loading: serverLoading } = useServer(serverId);
   const { data: members, loading: membersLoading } = useServerMembers(serverId);
@@ -118,7 +115,7 @@ export default function ServerSettingsDialog({ serverId, children }: ServerSetti
         await transferServerOwnership(firestore, serverId, user.uid, newOwnerId);
         toast({ title: "Ownership Transferred!", description: `The server is now owned by ${selectedNewOwner?.userProfile.displayName}.`});
         setShowTransferAlert(false);
-        setOpen(false); // Close main dialog on success
+        onOpenChange(false); // Close main dialog on success
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error transferring ownership", description: error.message });
     } finally {
@@ -138,22 +135,21 @@ export default function ServerSettingsDialog({ serverId, children }: ServerSetti
     } finally {
         setIsDeleting(false);
         setShowDeleteAlert(false);
-        setOpen(false);
+        onOpenChange(false);
     }
   };
 
-  if (!server) {
-      return children; // Should not happen if canManageServer is true, but for safety
+  if (serverLoading) {
+      return null;
   }
 
-  const isOwner = server.ownerId === user?.uid;
+  const isOwner = server?.ownerId === user?.uid;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-4 border-b">
-            <DialogTitle>Settings for {server.name}</DialogTitle>
+            <DialogTitle>Settings for {server?.name}</DialogTitle>
         </DialogHeader>
         <div className="flex-1 flex overflow-hidden">
           <Tabs defaultValue="general" className="w-full flex">
@@ -251,7 +247,7 @@ export default function ServerSettingsDialog({ serverId, children }: ServerSetti
           </Tabs>
         </div>
         <DialogFooter className="p-4 border-t">
-          <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleUpdateSettings} disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Changes
@@ -284,7 +280,7 @@ export default function ServerSettingsDialog({ serverId, children }: ServerSetti
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will permanently delete the <span className="font-bold">{server.name}</span> server. This action cannot be undone.
+                        This will permanently delete the <span className="font-bold">{server?.name}</span> server. This action cannot be undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

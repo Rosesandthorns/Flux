@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -141,6 +140,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showLeaveAlert, setShowLeaveAlert] = useState(false);
   const [showOwnerLeaveAlert, setShowOwnerLeaveAlert] = useState(false);
+  const [showServerSettings, setShowServerSettings] = useState(false);
 
   const isOwner = member?.role === 'owner';
   const canManageServer = !memberLoading && (isOwner || member?.role === 'admin');
@@ -210,11 +210,16 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
                 {canManageServer && (
-                <ServerSettingsDialog serverId={serverId}>
-                    <DropdownMenuItem>
-                    Server Settings
+                    <DropdownMenuItem onSelect={() => setShowInviteDialog(true)}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        <span>Invite People</span>
                     </DropdownMenuItem>
-                </ServerSettingsDialog>
+                )}
+                {canManageServer && (
+                    <DropdownMenuItem onSelect={() => setShowServerSettings(true)}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Server Settings</span>
+                    </DropdownMenuItem>
                 )}
                 {canManageServer && <DropdownMenuSeparator />}
                 <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onSelect={() => isOwner ? setShowOwnerLeaveAlert(true) : setShowLeaveAlert(true)}>
@@ -223,21 +228,6 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             </DropdownMenuContent>
             </DropdownMenu>
         </div>
-
-        {canManageServer && (
-            <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowInviteDialog(true)}>
-                    <UserPlus className="h-4 w-4" />
-                </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                <p>Invite People</p>
-                </TooltipContent>
-            </Tooltip>
-            </TooltipProvider>
-        )}
       </header>
       <div className="flex-1 overflow-y-auto p-2">
         <div className="space-y-1">
@@ -461,9 +451,10 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
+
+      {canManageServer && (
+        <ServerSettingsDialog serverId={serverId} open={showServerSettings} onOpenChange={setShowServerSettings} />
+      )}
     </div>
   );
-
-    
-
-    
+}
