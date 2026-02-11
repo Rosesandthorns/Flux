@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useUser, useUserProfile, useFirestore, useMessages, sendMessage, editMessage, deleteMessage } from '@/firebase';
+import { useUser, useUserProfile, useFirestore, useMessages, sendMessage, editMessage, deleteMessage, useAuthorProfiles } from '@/firebase';
 import { getConversationId, cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import type { FriendWithProfile } from '@/firebase/friends/types';
 import MessageRenderer from '../MessageRenderer';
 import { format } from 'date-fns';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import {
   AlertDialog,
@@ -58,6 +58,9 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
 
     const conversationId = user ? getConversationId(user.uid, contact.id) : null;
     const { messages, loading: messagesLoading } = useMessages(conversationId);
+    
+    const authorIds = useMemo(() => (messages ? [...new Set(messages.map((m) => m.authorId).concat(contact.id))] : [contact.id]), [messages, contact.id]);
+    const { profiles: authorProfiles, loading: profilesLoading } = useAuthorProfiles(authorIds);
 
     const messageForm = useForm<z.infer<typeof messageFormSchema>>({
         resolver: zodResolver(messageFormSchema),
@@ -78,8 +81,6 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
         await sendMessage(firestore, conversationId, {
             text: values.text,
             authorId: user.uid,
-            authorDisplayName: userProfile.displayName,
-            authorPhotoURL: userProfile.photoURL || '',
         });
 
         messageForm.reset();
@@ -143,6 +144,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
     }, [messages, user?.uid]);
 
     const isGlobalAdmin = userProfile?.status === 'owner' || userProfile?.status === 'admin';
+    const contactProfile = authorProfiles[contact.id];
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -150,7 +152,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
         <UserProfilePopover userId={contact.id}>
             <div className="flex items-center cursor-pointer rounded-md -ml-2 p-2 hover:bg-accent">
                 <AtSign className="h-6 w-6 text-muted-foreground" />
-                <h2 className="ml-2 text-lg font-semibold">{contact.userProfile.displayName}</h2>
+                <h2 className="ml-2 text-lg font-semibold">{contactProfile?.displayName || contact.userProfile.displayName}</h2>
             </div>
         </UserProfilePopover>
         <div className="ml-auto flex items-center gap-2">
@@ -163,7 +165,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full" ref={scrollAreaRef}>
           <div className="p-4">
-             {messagesLoading ? (
+             {messagesLoading || profilesLoading ? (
                  <div className="flex items-center justify-center h-full">
                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
                  </div>
@@ -175,6 +177,9 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
 
                     const canEdit = isAuthor;
                     const canDelete = isAuthor || isGlobalAdmin;
+
+                    const author = authorProfiles[msg.authorId];
+                    if (!author) return <div key={msg.id || index} className="h-12" />;
                     
                     return (
                         <div key={msg.id} className={cn("group relative flex items-start gap-3 py-1", showAuthor && 'mt-3')}>
@@ -189,8 +194,8 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                                 {showAuthor && (
                                     <UserProfilePopover userId={msg.authorId}>
                                         <Avatar className="h-10 w-10 cursor-pointer">
-                                            <AvatarImage src={msg.authorPhotoURL} alt={msg.authorDisplayName} />
-                                            <AvatarFallback>{msg.authorDisplayName.charAt(0)}</AvatarFallback>
+                                            <AvatarImage src={author.photoURL} alt={author.displayName} />
+                                            <AvatarFallback>{author.displayName.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                     </UserProfilePopover>
                                 )}
@@ -199,7 +204,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                                 {showAuthor && (
                                     <div className="flex items-baseline gap-2">
                                         <UserProfilePopover userId={msg.authorId}>
-                                            <p className="font-semibold text-primary cursor-pointer hover:underline">{msg.authorDisplayName}</p>
+                                            <p className="font-semibold text-primary cursor-pointer hover:underline">{author.displayName}</p>
                                         </UserProfilePopover>
                                         <p className="text-xs text-muted-foreground">
                                             {msg.createdAt ? format(msg.createdAt.toDate(), 'PP p') : null}
@@ -238,18 +243,20 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                     )
                 })
              ) : (
-                <UserProfilePopover userId={contact.id}>
-                    <div className="flex items-start gap-4 pt-8 pl-4 cursor-pointer">
-                        <Avatar className="h-20 w-20">
-                            <AvatarImage src={contact.userProfile.photoURL} alt={contact.userProfile.displayName} />
-                            <AvatarFallback>{contact.userProfile.displayName.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <h3 className="text-2xl font-bold hover:underline">{contact.userProfile.displayName}</h3>
-                            <p className="text-muted-foreground">This is the beginning of your direct message history with <span className="font-semibold text-foreground">@{contact.userProfile.handle.split('@')[0]}</span>.</p>
+                contactProfile && (
+                    <UserProfilePopover userId={contact.id}>
+                        <div className="flex items-start gap-4 pt-8 pl-4 cursor-pointer">
+                            <Avatar className="h-20 w-20">
+                                <AvatarImage src={contactProfile.photoURL} alt={contactProfile.displayName} />
+                                <AvatarFallback>{contactProfile.displayName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h3 className="text-2xl font-bold hover:underline">{contactProfile.displayName}</h3>
+                                <p className="text-muted-foreground">This is the beginning of your direct message history with <span className="font-semibold text-foreground">@{contactProfile.handle.split('@')[0]}</span>.</p>
+                            </div>
                         </div>
-                    </div>
-                </UserProfilePopover>
+                    </UserProfilePopover>
+                )
              )}
           </div>
         </ScrollArea>
@@ -265,7 +272,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                         <FormItem>
                             <FormControl>
                                  <Input
-                                    placeholder={`Message @${contact.userProfile.displayName}`}
+                                    placeholder={`Message @${contactProfile?.displayName || contact.userProfile.displayName}`}
                                     className="h-11 bg-secondary/80 pr-24 text-base"
                                     autoComplete="off"
                                     {...field}
@@ -308,5 +315,3 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
     </div>
   );
 }
-
-    

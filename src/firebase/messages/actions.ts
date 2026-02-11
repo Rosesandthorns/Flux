@@ -12,12 +12,12 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import type { Message } from './types';
 
-type MessagePayload = Omit<Message, 'id' | 'createdAt' | 'editedAt'>;
+type MessagePayload = Omit<Message, 'id' | 'createdAt' | 'editedAt' | 'conversationId'>;
 
 export const sendMessage = (
   firestore: Firestore,
   conversationId: string,
-  messageData: Omit<MessagePayload, 'conversationId'>
+  messageData: MessagePayload
 ) => {
   const messagesRef = collection(firestore, `dms/${conversationId}/messages`);
 

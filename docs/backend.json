@@ -148,15 +148,6 @@
           "type": "string",
           "description": "The UID of the user who sent the message."
         },
-        "authorDisplayName": {
-          "type": "string",
-          "description": "The display name of the author at the time of sending."
-        },
-        "authorPhotoURL": {
-          "type": "string",
-          "format": "uri",
-          "description": "The profile picture URL of the author."
-        },
         "text": {
           "type": "string",
           "description": "The content of the message."
@@ -176,7 +167,6 @@
       },
       "required": [
         "authorId",
-        "authorDisplayName",
         "text",
         "createdAt",
         "conversationId"
@@ -277,13 +267,6 @@
         "authorId": {
           "type": "string"
         },
-        "authorDisplayName": {
-          "type": "string"
-        },
-        "authorPhotoURL": {
-          "type": "string",
-          "format": "uri"
-        },
         "text": {
           "type": "string"
         },
@@ -300,7 +283,7 @@
           "type": "boolean"
         }
       },
-      "required": ["authorId", "authorDisplayName", "text", "createdAt", "channelId"]
+      "required": ["authorId", "text", "createdAt", "channelId"]
     },
     "voiceParticipant": {
       "title": "Voice Channel Participant",
@@ -430,5 +413,3 @@
     }
   }
 }
-
-    

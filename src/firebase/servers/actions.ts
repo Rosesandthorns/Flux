@@ -62,8 +62,6 @@ export async function createServer(firestore: Firestore, user: User, serverName:
     const messageRef = doc(collection(firestore, `servers/${newServerRef.id}/channels/${channelRef.id}/messages`));
     batch.set(messageRef, {
         authorId: 'flux-official',
-        authorDisplayName: 'Flux Official',
-        authorPhotoURL: '', // Can add an official logo URL here
         text: `# Welcome to ${serverName}!\n-# This is your brand new server. Here are a few tips to get you started:\n- You can invite friends using the server's invite code: **${inviteCode}**\n- Create new channels by clicking the '+' icon next to the channel headers.\n- Manage your server settings (soon!).`,
         createdAt: serverTimestamp(),
         channelId: channelRef.id,

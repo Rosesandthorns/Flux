@@ -9,6 +9,7 @@ import { useUser } from './auth/use-user';
 import { useCollection } from './firestore/use-collection';
 import { useDoc } from './firestore/use-doc';
 import { useUserProfile } from './auth/use-user-profile';
+import { useAuthorProfiles } from './auth/use-author-profiles';
 import { updateUserSettings } from './auth/settings';
 import { deleteUserDocument, getUserProfiles } from './auth/users';
 import { sendFriendRequest, acceptFriendRequest, declineOrCancelFriendRequest, blockUser, unblockUser, removeFriend } from './friends/actions';
@@ -50,6 +51,7 @@ export {
   useCollection,
   useDoc,
   useUserProfile,
+  useAuthorProfiles,
   updateUserSettings,
   sendFriendRequest,
   acceptFriendRequest,
@@ -94,5 +96,3 @@ export {
   endCall,
 };
 export type { Message, DMCall, DMCallStatus, DMCallWithProfiles };
-
-    

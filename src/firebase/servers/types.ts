@@ -32,8 +32,6 @@ export interface Channel {
 export interface ServerMessage {
   id?: string;
   authorId: string;
-  authorDisplayName: string;
-  authorPhotoURL: string;
   text: string;
   createdAt: Timestamp | null;
   editedAt?: Timestamp | null;

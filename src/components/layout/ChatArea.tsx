@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem } from '../ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useUser, useUserProfile, useFirestore, sendServerMessage, editServerMessage, deleteServerMessage, togglePinServerMessage, useServerMembers, kickServerMember, updateUserRole } from '@/firebase';
+import { useUser, useUserProfile, useFirestore, sendServerMessage, editServerMessage, deleteServerMessage, togglePinServerMessage, useServerMembers, kickServerMember, updateUserRole, useAuthorProfiles } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import MessageRenderer from '../MessageRenderer';
@@ -72,6 +72,8 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
     const [isUpdatingTrialMember, setIsUpdatingTrialMember] = useState<string | null>(null);
 
     const { data: serverMembers, loading: membersLoading } = useServerMembers(serverId);
+    const authorIds = useMemo(() => (messages ? [...new Set(messages.map((m) => m.authorId))] : []), [messages]);
+    const { profiles: authorProfiles, loading: profilesLoading } = useAuthorProfiles(authorIds);
 
     const pinnedMessages = messages?.filter(msg => msg.pinned) || [];
 
@@ -109,8 +111,6 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
         await sendServerMessage(firestore, serverId, activeChannel.id!, {
             text: values.text,
             authorId: user.uid,
-            authorDisplayName: userProfile.displayName,
-            authorPhotoURL: userProfile.photoURL || '',
         });
 
         messageForm.reset();
@@ -244,26 +244,34 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                     </SheetHeader>
                     <ScrollArea className="flex-1 -mx-6">
                         <div className="px-6 py-4 space-y-4">
-                            {pinnedMessages.length > 0 ? (
-                                pinnedMessages.map(msg => (
-                                    <div key={msg.id} className="p-3 rounded-lg border bg-card/50">
-                                        <div className="flex items-start gap-3">
-                                                <Avatar className="h-10 w-10">
-                                                <AvatarImage src={msg.authorPhotoURL} alt={msg.authorDisplayName} />
-                                                <AvatarFallback>{msg.authorDisplayName.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1">
-                                                    <div className="flex items-baseline gap-2">
-                                                    <p className="font-semibold text-primary">{msg.authorDisplayName}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {msg.createdAt ? format(msg.createdAt.toDate(), 'PP p') : null}
-                                                    </p>
+                            {profilesLoading && pinnedMessages.length > 0 ? (
+                                <div className="flex justify-center items-center h-full">
+                                    <Loader2 className="h-8 w-8 animate-spin" />
+                                </div>
+                            ) : pinnedMessages.length > 0 ? (
+                                pinnedMessages.map(msg => {
+                                    const author = authorProfiles[msg.authorId];
+                                    if (!author) return null;
+                                    return (
+                                        <div key={msg.id} className="p-3 rounded-lg border bg-card/50">
+                                            <div className="flex items-start gap-3">
+                                                    <Avatar className="h-10 w-10">
+                                                    <AvatarImage src={author.photoURL} alt={author.displayName} />
+                                                    <AvatarFallback>{author.displayName.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1">
+                                                        <div className="flex items-baseline gap-2">
+                                                        <p className="font-semibold text-primary">{author.displayName}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {msg.createdAt ? format(msg.createdAt.toDate(), 'PP p') : null}
+                                                        </p>
+                                                    </div>
+                                                    <MessageRenderer content={msg.text} />
                                                 </div>
-                                                <MessageRenderer content={msg.text} />
                                             </div>
                                         </div>
-                                    </div>
-                                ))
+                                    )
+                                })
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-16">
                                     <Pin className="h-12 w-12 mb-4" />
@@ -280,7 +288,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                     <Button variant="ghost" size="icon"><Users className="h-5 w-5" /></Button>
                 </SheetTrigger>
                 <SheetContent 
-                    className="flex flex-col z-[100]"
+                    className="flex flex-col z-[200]"
                     onPointerDownOutside={(e) => {
                         const target = e.target as HTMLElement;
                         if (target.closest('[data-radix-dialog-content]') || target.closest('[data-radix-select-content]')) {
@@ -386,7 +394,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full" ref={scrollAreaRef}>
           <div className="p-4">
-            {messagesLoading ? (
+            {messagesLoading || (authorIds.length > 0 && profilesLoading) ? (
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
@@ -398,6 +406,9 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
               const canEdit = isAuthor;
               const canDelete = isAuthor || isServerAdmin || isGlobalAdmin;
               const canPin = isServerAdmin || isGlobalAdmin;
+
+              const author = authorProfiles[msg.authorId];
+              if (!author) return <div key={msg.id || index} className="h-12 w-full" />;
 
               return (
                  <div key={msg.id} className={cn("group relative flex items-start gap-3 py-1", showAuthor && 'mt-3')}>
@@ -412,8 +423,8 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                     <div className="w-10">
                         {showAuthor && (
                             <Avatar className="h-10 w-10">
-                                <AvatarImage src={msg.authorPhotoURL} alt={msg.authorDisplayName} />
-                                <AvatarFallback>{msg.authorDisplayName.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={author.photoURL} alt={author.displayName} />
+                                <AvatarFallback>{author.displayName.charAt(0)}</AvatarFallback>
                             </Avatar>
                         )}
                     </div>
@@ -421,7 +432,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                         {showAuthor && (
                             <div className="flex items-baseline gap-2">
                                 <UserProfilePopover userId={msg.authorId} serverId={serverId} currentUserMember={member}>
-                                    <p className="font-semibold text-primary cursor-pointer hover:underline">{msg.authorDisplayName}</p>
+                                    <p className="font-semibold text-primary cursor-pointer hover:underline">{author.displayName}</p>
                                 </UserProfilePopover>
                                 <p className="text-xs text-muted-foreground">
                                     {msg.createdAt ? format(msg.createdAt.toDate(), 'PP p') : null}
