@@ -11,15 +11,15 @@ const { app, auth, firestore } = initializeFirebase();
 
 export function Providers({ children }: { children: ReactNode }) {
     return (
-        <ThemeProvider>
-            <VoiceProvider>
-                <FirebaseClientProvider app={app} auth={auth} firestore={firestore}>
+        <FirebaseClientProvider app={app} auth={auth} firestore={firestore}>
+            <ThemeProvider>
+                <VoiceProvider>
                     <AuthGuard>
                         {children}
                         <ServerRail />
                     </AuthGuard>
-                </FirebaseClientProvider>
-            </VoiceProvider>
-        </ThemeProvider>
+                </VoiceProvider>
+            </ThemeProvider>
+        </FirebaseClientProvider>
     );
 }
