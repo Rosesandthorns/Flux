@@ -12,6 +12,7 @@ import {
   X,
   Plus,
   Copy,
+  UserPlus,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -197,30 +198,46 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   return (
     <div className="relative z-10 flex h-full w-64 flex-col bg-secondary/30 backdrop-blur-xl shrink-0">
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-border/50 px-4 shadow-sm">
-        <h1 className="text-lg font-bold tracking-tight text-primary">
-          {server?.name || 'Server'}
-        </h1>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {canManageServer && <DropdownMenuItem onSelect={() => setShowInviteDialog(true)}>Invite People</DropdownMenuItem>}
-            {canManageServer && (
-              <ServerSettingsDialog serverId={serverId}>
-                <DropdownMenuItem>
-                  Server Settings
+        <div className="flex items-center min-w-0">
+            <h1 className="text-lg font-bold tracking-tight text-primary truncate">
+            {server?.name || 'Server'}
+            </h1>
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 ml-1 flex-shrink-0">
+                <ChevronDown className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                {canManageServer && (
+                <ServerSettingsDialog serverId={serverId}>
+                    <DropdownMenuItem>
+                    Server Settings
+                    </DropdownMenuItem>
+                </ServerSettingsDialog>
+                )}
+                {canManageServer && <DropdownMenuSeparator />}
+                <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onSelect={() => isOwner ? setShowOwnerLeaveAlert(true) : setShowLeaveAlert(true)}>
+                Leave Server
                 </DropdownMenuItem>
-              </ServerSettingsDialog>
-            )}
-            {canManageServer && <DropdownMenuSeparator />}
-            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onSelect={() => isOwner ? setShowOwnerLeaveAlert(true) : setShowLeaveAlert(true)}>
-              Leave Server
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+
+        {canManageServer && (
+            <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowInviteDialog(true)}>
+                    <UserPlus className="h-4 w-4" />
+                </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                <p>Invite People</p>
+                </TooltipContent>
+            </Tooltip>
+            </TooltipProvider>
+        )}
       </header>
       <div className="flex-1 overflow-y-auto p-2">
         <div className="space-y-1">
