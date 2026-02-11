@@ -13,7 +13,13 @@ import {
   DrawerTrigger,
   DrawerClose,
 } from '@/components/ui/drawer';
+import {
+    Sheet,
+    SheetContent,
+    SheetTrigger,
+} from '@/components/ui/sheet';
 import ExploreServers from './ExploreServers';
+import DirectMessages from './DirectMessages';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 
@@ -40,9 +46,25 @@ export default function ServerRail() {
         <div className="group fixed inset-x-0 bottom-0 z-50 flex h-24 items-end justify-center pointer-events-none">
             <nav className="mb-4 transform-gpu transition-all duration-300 ease-in-out opacity-0 translate-y-8 group-hover:opacity-100 group-hover:translate-y-0 pointer-events-auto">
                 <div className="flex items-center space-x-3 bg-background/50 p-3 backdrop-blur-md rounded-full border border-border/50 shadow-lg">
-                    <ServerButton tooltip="Direct Messages">
-                        <Home className="h-6 w-6" />
-                    </ServerButton>
+                    <Sheet>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <SheetTrigger asChild>
+                                    <button
+                                        className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground transition-all duration-300 ease-in-out hover:bg-primary"
+                                    >
+                                        <Home className="h-6 w-6" />
+                                    </button>
+                                </SheetTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                                <p>Direct Messages</p>
+                            </TooltipContent>
+                        </Tooltip>
+                        <SheetContent side="top" className="h-screen w-screen p-0 border-none">
+                            <DirectMessages />
+                        </SheetContent>
+                    </Sheet>
                     <div className="h-8 w-[2px] bg-border" />
                     {servers.map((server, index) => (
                     <Tooltip key={server.id}>
@@ -81,7 +103,7 @@ export default function ServerRail() {
                                 <p>Explore Servers</p>
                             </TooltipContent>
                         </Tooltip>
-                        <DrawerContent className="h-full top-0 rounded-none flex flex-col">
+                        <DrawerContent className="h-full max-h-screen top-0 mt-0 rounded-none flex flex-col">
                            <DrawerHeader className="p-6 pb-2 text-center">
                                 <DrawerTitle className="text-2xl font-bold">Explore Public Servers</DrawerTitle>
                                 <DrawerDescription>Find your next community. Here are some popular servers to get you started.</DrawerDescription>
