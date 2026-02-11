@@ -50,9 +50,9 @@ export default function DirectMessages() {
             </div>
         </div>
 
-        <Tabs defaultValue="all" className="flex-1 flex flex-col overflow-hidden px-4 pt-2">
+        <Tabs defaultValue="all" className="flex-1 flex flex-col overflow-hidden px-4 pt-4">
             <TooltipProvider>
-                <TabsList className="flex items-center gap-3 bg-transparent p-0 h-auto pt-2">
+                <TabsList className="flex items-center gap-3 bg-transparent p-0 h-auto">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <TabsTrigger value="online" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground p-2">
@@ -168,9 +168,9 @@ export default function DirectMessages() {
                 <TabsContent value="add">
                     <div className="p-2">
                         <h2 className="text-lg font-bold uppercase">Add Friend</h2>
-                        <p className="text-muted-foreground text-sm mt-1 mb-4">You can add a friend with their FluxTag. It isn't case-sensitive.</p>
+                        <p className="text-muted-foreground text-sm mt-1 mb-4">You can add a friend with their username. It isn't case-sensitive.</p>
                         <div className="relative rounded-md bg-background/50">
-                            <Input placeholder="Enter a Username#0000" className="bg-transparent border-0 pr-48" />
+                            <Input placeholder="Enter a username@flux" className="bg-transparent border-0 pr-48" />
                             <Button className="absolute right-2 top-1/2 -translate-y-1/2 h-8 bg-primary hover:bg-primary/90">Send Friend Request</Button>
                         </div>
                     </div>
@@ -180,11 +180,11 @@ export default function DirectMessages() {
         <footer className="mt-auto flex h-14 items-center border-t border-border/50 bg-background/30 px-2">
             <div className="flex items-center">
                 <Avatar className="h-8 w-8">
-                    {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint} />}
+                    {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint as string} />}
                     <AvatarFallback>U</AvatarFallback>
                 </Avatar>
                 <div className="ml-2">
-                    <p className="text-sm font-semibold">Username</p>
+                    <p className="text-sm font-semibold">username</p>
                     <p className="text-xs text-muted-foreground">Online</p>
                 </div>
             </div>

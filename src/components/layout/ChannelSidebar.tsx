@@ -59,7 +59,7 @@ export default function ChannelSidebar() {
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
           <div className="ml-2">
-            <p className="text-sm font-semibold">Username</p>
+            <p className="text-sm font-semibold">username</p>
             <p className="text-xs text-muted-foreground">Online</p>
           </div>
         </div>

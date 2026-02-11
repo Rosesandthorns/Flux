@@ -49,8 +49,8 @@ export default function SettingsPage() {
                                     <AvatarFallback>U</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <h2 className="text-xl font-semibold">Username</h2>
-                                    <p className="text-muted-foreground">Username#0001</p>
+                                    <h2 className="text-xl font-semibold">username</h2>
+                                    <p className="text-muted-foreground">username@flux</p>
                                 </div>
                              </div>
                             <Button>Edit User Profile</Button>
