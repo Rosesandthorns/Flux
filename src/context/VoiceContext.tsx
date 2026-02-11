@@ -135,11 +135,26 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
     resetState();
   }, [cleanupResources, resetState]);
 
+  // This ref pattern is crucial to prevent the useEffect below from re-running on every render,
+  // which was the cause of the join/leave bug.
+  const cleanupRef = useRef(cleanup);
+  useEffect(() => {
+    cleanupRef.current = cleanup;
+  });
 
   useEffect(() => {
-    // Cleanup on unmount or when user logs out
-    return () => cleanup();
-  }, [cleanup, user]);
+    // This effect now only triggers its cleanup when the component unmounts or the user logs out.
+    // It will not trigger on channel changes.
+    const handleCleanup = () => cleanupRef.current();
+
+    // Add a beforeunload listener to clean up if the user closes the tab
+    window.addEventListener('beforeunload', handleCleanup);
+
+    return () => {
+      handleCleanup();
+      window.removeEventListener('beforeunload', handleCleanup);
+    };
+  }, [user]); // The effect's behavior is tied to the user's session and component lifecycle.
 
   const leaveChannel = useCallback(() => {
     cleanup();
@@ -150,6 +165,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
       if (activeVoiceChannel?.channelId === channelId) return;
       if (!firestore || !user || !userProfile) return;
 
+      // Clean up resources from the PREVIOUS channel, but don't reset UI state yet.
       cleanupResources();
 
       try {
@@ -159,11 +175,12 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
         });
         localStreamRef.current = stream;
 
+        // Immediately update the UI to show the user is in the new channel
+        setActiveVoiceChannel({ serverId, channelId, channelName });
+
         const { default: Peer } = await import('peerjs');
         const newPeer = new Peer();
         peerRef.current = newPeer;
-
-        setActiveVoiceChannel({ serverId, channelId, channelName });
 
         newPeer.on('open', (peerId) => {
           const participantRef = doc(
@@ -198,6 +215,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
               );
               setFirestoreParticipants(currentParticipants);
 
+              // Connect to new participants
               currentParticipants.forEach((p) => {
                 if (
                   p.peerId !== peerId &&
@@ -222,6 +240,20 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
                       });
                     });
                   }
+                }
+              });
+              
+              // Clean up connections to participants who have left
+              const currentPeerIds = new Set(currentParticipants.map(p => p.peerId));
+              Object.keys(connectionsRef.current).forEach(connPeerId => {
+                if (!currentPeerIds.has(connPeerId)) {
+                  connectionsRef.current[connPeerId]?.close();
+                  delete connectionsRef.current[connPeerId];
+                   setRemoteStreams((prev) => {
+                        const next = { ...prev };
+                        delete next[connPeerId];
+                        return next;
+                      });
                 }
               });
             }
@@ -269,7 +301,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
         cleanup();
       }
     },
-    [cleanup, cleanupResources, firestore, user, userProfile, activeVoiceChannel, toast]
+    [cleanupResources, firestore, user, userProfile, activeVoiceChannel, cleanup, toast]
   );
 
   const toggleMute = useCallback(() => {
