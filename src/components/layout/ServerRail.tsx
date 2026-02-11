@@ -1,21 +1,23 @@
 "use client";
 
-import { Home, Plus, Compass, X } from 'lucide-react';
+import { Home, Plus, Compass } from 'lucide-react';
 import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerTrigger,
-  DrawerClose,
-} from '@/components/ui/drawer';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
     Sheet,
     SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetDescription,
     SheetTrigger,
 } from '@/components/ui/sheet';
 import ExploreServers from './ExploreServers';
@@ -62,6 +64,12 @@ export default function ServerRail() {
                             </TooltipContent>
                         </Tooltip>
                         <SheetContent side="top" className="h-screen w-screen p-0 border-none">
+                            <SheetHeader className="sr-only">
+                              <SheetTitle>Direct Messages</SheetTitle>
+                              <SheetDescription>
+                                A list of your direct messages and private conversations.
+                              </SheetDescription>
+                            </SheetHeader>
                             <DirectMessages />
                         </SheetContent>
                     </Sheet>
@@ -88,39 +96,33 @@ export default function ServerRail() {
                     <ServerButton tooltip="Add a Server">
                         <Plus className="h-6 w-6" />
                     </ServerButton>
-                    <Drawer>
+                    <Dialog>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <DrawerTrigger asChild>
+                                <DialogTrigger asChild>
                                     <button
                                     className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground transition-all duration-300 ease-in-out hover:bg-primary"
                                     >
                                     <Compass className="h-6 w-6" />
                                     </button>
-                                </DrawerTrigger>
+                                </DialogTrigger>
                             </TooltipTrigger>
                             <TooltipContent side="top">
                                 <p>Explore Servers</p>
                             </TooltipContent>
                         </Tooltip>
-                        <DrawerContent className="h-full max-h-screen top-0 mt-0 rounded-none flex flex-col">
-                           <DrawerHeader className="p-6 pb-2 text-center">
-                                <DrawerTitle className="text-2xl font-bold">Explore Public Servers</DrawerTitle>
-                                <DrawerDescription>Find your next community. Here are some popular servers to get you started.</DrawerDescription>
-                            </DrawerHeader>
-                            <ScrollArea className="flex-1">
-                                <div className="p-6 pt-2">
+                        <DialogContent className="max-w-4xl h-3/4 flex flex-col">
+                           <DialogHeader>
+                                <DialogTitle>Explore Public Servers</DialogTitle>
+                                <DialogDescription>Find your next community. Here are some popular servers to get you started.</DialogDescription>
+                            </DialogHeader>
+                            <ScrollArea className="flex-1 -mx-6">
+                                <div className="px-6">
                                     <ExploreServers />
                                 </div>
                             </ScrollArea>
-                            <DrawerClose asChild className="absolute top-4 right-4">
-                              <Button variant="ghost" size="icon">
-                                <X className="h-4 w-4" />
-                                <span className="sr-only">Close</span>
-                              </Button>
-                            </DrawerClose>
-                        </DrawerContent>
-                    </Drawer>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </nav>
         </div>
