@@ -84,7 +84,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
     const [attachments, setAttachments] = useState<string[]>([]);
     const [attachmentUrls, setAttachmentUrls] = useState("");
     const [isAttachmentDialogOpen, setIsAttachmentDialogOpen] = useState(false);
-    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
 
     const { data: serverMembers, loading: membersLoading } = useServerMembers(serverId);
@@ -229,8 +229,10 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
             messageForm.setValue("text", newText, { shouldValidate: true });
             
             setTimeout(() => {
-                textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
-                textarea.focus();
+                if (inputRef.current) {
+                    inputRef.current.selectionStart = inputRef.current.selectionEnd = start + emoji.length;
+                    inputRef.current.focus();
+                }
             }, 0);
         }
     };
@@ -569,11 +571,15 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                      <FormField
                         control={messageForm.control}
                         name="text"
-                        render={({ field }) => (
+                        render={({ field: { ref, ...rest } }) => (
                             <FormItem>
                                 <FormControl>
                                      <Textarea
-                                        ref={inputRef}
+                                        {...rest}
+                                        ref={(e) => {
+                                            ref(e);
+                                            inputRef.current = e;
+                                        }}
                                         placeholder={canWrite ? `Message #${activeChannel.name}` : "You don't have permission to post here."}
                                         className="h-auto max-h-48 bg-secondary/80 pr-32 text-base resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                                         autoComplete="off"
@@ -586,7 +592,6 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                                 }
                                             }
                                         }}
-                                        {...field}
                                     />
                                 </FormControl>
                             </FormItem>

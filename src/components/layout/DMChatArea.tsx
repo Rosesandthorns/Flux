@@ -68,7 +68,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
     const [attachments, setAttachments] = useState<string[]>([]);
     const [attachmentUrls, setAttachmentUrls] = useState("");
     const [isAttachmentDialogOpen, setIsAttachmentDialogOpen] = useState(false);
-    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
 
     const conversationId = user ? getConversationId(user.uid, contact.id) : null;
@@ -162,8 +162,10 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
             messageForm.setValue("text", newText, { shouldValidate: true });
             
             setTimeout(() => {
-                textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
-                textarea.focus();
+                if (inputRef.current) {
+                    inputRef.current.selectionStart = inputRef.current.selectionEnd = start + emoji.length;
+                    inputRef.current.focus();
+                }
             }, 0);
         }
     };
@@ -342,11 +344,15 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                     <FormField
                         control={messageForm.control}
                         name="text"
-                        render={({ field }) => (
+                        render={({ field: { ref, ...rest } }) => (
                             <FormItem>
                                 <FormControl>
                                      <Textarea
-                                        ref={inputRef}
+                                        {...rest}
+                                        ref={(e) => {
+                                            ref(e);
+                                            inputRef.current = e;
+                                        }}
                                         placeholder={`Message @${contactProfile?.displayName || contact.userProfile.displayName}`}
                                         className="h-auto max-h-48 bg-secondary/80 pr-32 text-base resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                                         autoComplete="off"
@@ -358,7 +364,6 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                                                 }
                                             }
                                         }}
-                                        {...field}
                                     />
                                 </FormControl>
                             </FormItem>
