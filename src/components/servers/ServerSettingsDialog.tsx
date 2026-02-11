@@ -49,6 +49,7 @@ export default function ServerSettingsDialog({ serverId, open, onOpenChange }: S
 
   // Form state
   const [serverName, setServerName] = useState('');
+  const [iconURL, setIconURL] = useState('');
   const [trialMode, setTrialMode] = useState(false);
   const [acceptingInvites, setAcceptingInvites] = useState(true);
 
@@ -67,6 +68,7 @@ export default function ServerSettingsDialog({ serverId, open, onOpenChange }: S
   useEffect(() => {
     if (server) {
       setServerName(server.name);
+      setIconURL(server.iconURL || '');
       setTrialMode(server.trialModeEnabled ?? false);
       setAcceptingInvites(server.acceptingInvites ?? true);
     }
@@ -86,6 +88,7 @@ export default function ServerSettingsDialog({ serverId, open, onOpenChange }: S
     
     const updates: Partial<Server> = {};
     if (serverName !== server.name) updates.name = serverName;
+    if (iconURL !== (server.iconURL || '')) updates.iconURL = iconURL;
     if (trialMode !== server.trialModeEnabled) updates.trialModeEnabled = trialMode;
     if (acceptingInvites !== server.acceptingInvites) updates.acceptingInvites = acceptingInvites;
 
@@ -169,6 +172,10 @@ export default function ServerSettingsDialog({ serverId, open, onOpenChange }: S
                             <div className="space-y-2">
                                 <Label htmlFor="server-name-settings">Server Name</Label>
                                 <Input id="server-name-settings" value={serverName} onChange={(e) => setServerName(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="server-icon-settings">Server Icon URL</Label>
+                                <Input id="server-icon-settings" value={iconURL} onChange={(e) => setIconURL(e.target.value)} placeholder="https://example.com/icon.png" />
                             </div>
                              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
                                 <div className="space-y-0.5">
