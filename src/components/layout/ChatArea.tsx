@@ -281,6 +281,12 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                 </SheetTrigger>
                 <SheetContent 
                     className="flex flex-col"
+                    onPointerDownOutside={(e) => {
+                        const target = e.target as HTMLElement;
+                        if (target.closest('[data-radix-popover-content]') || target.closest('[data-radix-select-content]')) {
+                            e.preventDefault();
+                        }
+                    }}
                 >
                     <SheetHeader>
                         <SheetTitle>Server Members</SheetTitle>
@@ -301,7 +307,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                             <h3 className="text-sm font-semibold uppercase text-amber-500 mb-2">Trial Members — {trialMembers.length}</h3>
                                             <div className="space-y-2">
                                                 {trialMembers.map(m => (
-                                                    <div key={m.id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
+                                                    <div key={m.id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent group/member-item">
                                                         <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
                                                              <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1 -m-2 p-2">
                                                                 <Avatar className="h-9 w-9">
@@ -333,7 +339,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                             <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Admins — {adminMembers.length}</h3>
                                             <div className="space-y-2">
                                                 {adminMembers.map(m => (
-                                                     <div key={m.id} className="flex items-center gap-3 p-2 -m-2 rounded-md hover:bg-accent">
+                                                     <div key={m.id} className="flex items-center gap-3 p-2 -m-2 rounded-md hover:bg-accent group/member-item">
                                                          <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
                                                             <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1">
                                                                 <Avatar className="h-9 w-9">
@@ -353,7 +359,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                             <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-2">Members — {regularMembers.length}</h3>
                                             <div className="space-y-2">
                                                 {regularMembers.map(m => (
-                                                    <div key={m.id} className="flex items-center gap-3 p-2 -m-2 rounded-md hover:bg-accent">
+                                                    <div key={m.id} className="flex items-center gap-3 p-2 -m-2 rounded-md hover:bg-accent group/member-item">
                                                         <UserProfilePopover userId={m.id!} serverId={serverId} currentUserMember={member}>
                                                             <div className="flex items-center gap-3 rounded-md cursor-pointer flex-1">
                                                                 <Avatar className="h-9 w-9">
@@ -524,6 +530,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
 }
 
     
+
 
 
 

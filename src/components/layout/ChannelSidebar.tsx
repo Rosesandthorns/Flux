@@ -364,7 +364,13 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             <SheetContent
               showCloseButton={false}
               side="top"
-              className="h-screen w-screen p-0 border-none z-[111]"
+              className="h-screen w-screen p-0 border-none"
+              onPointerDownOutside={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.closest('[data-radix-dialog-content]')) {
+                      e.preventDefault();
+                  }
+              }}
             >
               <SheetHeader className="sr-only">
                 <SheetTitle>Settings</SheetTitle>
