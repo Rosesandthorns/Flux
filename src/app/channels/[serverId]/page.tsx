@@ -2,11 +2,12 @@
 
 import { useServerChannels } from "@/firebase/servers/hooks";
 import { redirect } from "next/navigation";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 // This page is a redirector. It finds the first text channel in the server and redirects to it.
-export default function ServerPage({ params }: { params: { serverId: string } }) {
+export default function ServerPage({ params: paramsProp }: { params: { serverId: string } }) {
+    const params = React.use(paramsProp);
     const { channels, loading } = useServerChannels(params.serverId);
 
     useEffect(() => {
