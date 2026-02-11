@@ -128,6 +128,66 @@ export const sendServerMessage = (
   });
 };
 
+export const editServerMessage = (
+    firestore: Firestore,
+    serverId: string,
+    channelId: string,
+    messageId: string,
+    newText: string
+) => {
+    const messageRef = doc(firestore, `servers/${serverId}/channels/${channelId}/messages/${messageId}`);
+    const data = {
+        text: newText,
+        editedAt: serverTimestamp()
+    };
+    return updateDoc(messageRef, data).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: messageRef.path,
+            operation: 'update',
+            requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+};
+
+export const deleteServerMessage = (
+    firestore: Firestore,
+    serverId: string,
+    channelId: string,
+    messageId: string
+) => {
+    const messageRef = doc(firestore, `servers/${serverId}/channels/${channelId}/messages/${messageId}`);
+    return deleteDoc(messageRef).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: messageRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+};
+
+export const togglePinServerMessage = (
+    firestore: Firestore,
+    serverId: string,
+    channelId: string,
+    messageId: string,
+    currentPinStatus: boolean | undefined
+) => {
+    const messageRef = doc(firestore, `servers/${serverId}/channels/${channelId}/messages/${messageId}`);
+    const data = { pinned: !currentPinStatus };
+    return updateDoc(messageRef, data).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: messageRef.path,
+            operation: 'update',
+            requestResourceData: data,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+}
+
 export const createChannel = (
     firestore: Firestore,
     serverId: string,

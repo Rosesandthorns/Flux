@@ -8,5 +8,6 @@ export interface Message {
   authorPhotoURL: string;
   text: string;
   createdAt: Timestamp | null;
+  editedAt?: Timestamp | null;
   conversationId: string;
 }

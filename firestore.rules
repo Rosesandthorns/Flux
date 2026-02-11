@@ -69,7 +69,8 @@ service cloud.firestore {
       match /messages/{messageId} {
         allow read: if request.auth.uid in conversationId.split('_');
         allow create: if request.auth.uid in conversationId.split('_') && request.auth.uid == request.resource.data.authorId;
-        allow update, delete: if false;
+        allow update: if request.auth.uid == resource.data.authorId;
+        allow delete: if request.auth.uid == resource.data.authorId;
       }
     }
 
@@ -93,8 +94,8 @@ service cloud.firestore {
         match /messages/{messageId} {
             allow read: if canReadChannelContent(serverId, channelId);
             allow create: if request.auth.uid == request.resource.data.authorId && canWriteToChannel(serverId, channelId);
+            allow update: if request.auth.uid == resource.data.authorId || isServerAdmin(serverId);
             allow delete: if isServerAdmin(serverId) || request.auth.uid == resource.data.authorId;
-            allow update: if false;
         }
       }
     }

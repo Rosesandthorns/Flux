@@ -42,6 +42,7 @@ export default function ChannelPage({ params: paramsProp }: ChannelPageProps) {
     return <ChatArea 
         serverId={serverId}
         activeChannel={activeChannel}
+        member={member}
         messages={messages}
         messagesLoading={messagesLoading}
     />;

@@ -151,6 +151,10 @@
         "conversationId": {
           "type": "string",
           "description": "The ID of the conversation this message belongs to."
+        },
+        "editedAt": {
+          "type": "string",
+          "description": "The timestamp when the message was last edited."
         }
       },
       "required": [
@@ -266,6 +270,12 @@
         },
         "channelId": {
           "type": "string"
+        },
+        "editedAt": {
+          "type": "string"
+        },
+        "pinned": {
+          "type": "boolean"
         }
       },
       "required": ["authorId", "authorDisplayName", "text", "createdAt", "channelId"]

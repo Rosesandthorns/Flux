@@ -1,46 +1,73 @@
 'use client';
 
-import { Hash, Pin, Users, Paperclip, Smile, Send } from 'lucide-react';
+import { Hash, Pin, Users, Paperclip, Smile, Send, Pencil, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Channel, ServerMessage } from '@/firebase/servers/types';
+import type { Channel, ServerMember, ServerMessage } from '@/firebase/servers/types';
 import { Form, FormControl, FormField, FormItem } from '../ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useUser, useUserProfile, useFirestore, sendServerMessage } from '@/firebase';
+import { useUser, useUserProfile, useFirestore, sendServerMessage, editServerMessage, deleteServerMessage, togglePinServerMessage } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import MessageRenderer from '../MessageRenderer';
 import { format } from 'date-fns';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
 
 interface ChatAreaProps {
   serverId: string;
   activeChannel: Channel | undefined;
   messages: ServerMessage[] | null;
   messagesLoading: boolean;
+  member: ServerMember | null;
 }
 
 const formSchema = z.object({
   text: z.string().min(1, "Message cannot be empty."),
 });
 
-export default function ChatArea({ serverId, activeChannel, messages, messagesLoading }: ChatAreaProps) {
+const editFormSchema = z.object({
+  text: z.string().min(1, "Message cannot be empty."),
+});
+
+
+export default function ChatArea({ serverId, activeChannel, messages, messagesLoading, member }: ChatAreaProps) {
     const { user } = useUser();
     const { data: userProfile } = useUserProfile();
     const firestore = useFirestore();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const { toast } = useToast();
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+    const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+    const messageForm = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            text: "",
-        },
+        defaultValues: { text: "" },
+    });
+    
+    const editForm = useForm<z.infer<typeof editFormSchema>>({
+        resolver: zodResolver(editFormSchema),
     });
 
-    async function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onMessageSubmit(values: z.infer<typeof formSchema>) {
         if (!firestore || !user || !userProfile || !activeChannel) return;
         
         await sendServerMessage(firestore, serverId, activeChannel.id!, {
@@ -50,17 +77,76 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
             authorPhotoURL: userProfile.photoURL || '',
         });
 
-        form.reset();
+        messageForm.reset();
+    }
+    
+    async function onEditSubmit(values: z.infer<typeof editFormSchema>) {
+        if (!firestore || !activeChannel || !editingMessageId || !values.text) return;
+        
+        setIsSavingEdit(true);
+        try {
+            await editServerMessage(firestore, serverId, activeChannel.id, editingMessageId, values.text);
+            setEditingMessageId(null);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not save message.' });
+        } finally {
+            setIsSavingEdit(false);
+        }
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!firestore || !activeChannel || !deletingMessageId) return;
+        
+        try {
+            await deleteServerMessage(firestore, serverId, activeChannel.id, deletingMessageId);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete message.' });
+        } finally {
+            setDeletingMessageId(null);
+            setIsDeleteAlertOpen(false);
+        }
+    }
+
+    const handleTogglePin = async (message: ServerMessage) => {
+        if (!firestore || !activeChannel || !message.id) return;
+
+        try {
+            await togglePinServerMessage(firestore, serverId, activeChannel.id, message.id, message.pinned);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not update pin status.' });
+        }
+    }
+    
+    const startEditing = (message: ServerMessage) => {
+        setEditingMessageId(message.id!);
+        editForm.setValue('text', message.text);
+    }
+    
+    const cancelEditing = () => {
+        setEditingMessageId(null);
+        editForm.reset();
+    }
+    
+    const startDeleting = (message: ServerMessage) => {
+        setDeletingMessageId(message.id!);
+        setIsDeleteAlertOpen(true);
     }
 
     useEffect(() => {
-        if (scrollAreaRef.current) {
-            scrollAreaRef.current.scrollTo({
-                top: scrollAreaRef.current.scrollHeight,
-                behavior: 'smooth'
-            });
+        if (scrollAreaRef.current && messages?.length) {
+            const lastMessage = messages[messages.length - 1];
+            // Only auto-scroll if the new message is from the current user, or if we are already near the bottom
+            const viewport = scrollAreaRef.current.querySelector('div');
+            if (viewport) {
+                const isScrolledToBottom = viewport.scrollHeight - viewport.clientHeight <= viewport.scrollTop + 100;
+                if (lastMessage?.authorId === user?.uid || isScrolledToBottom) {
+                    setTimeout(() => {
+                        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+                    }, 100);
+                }
+            }
         }
-    }, [messages]);
+    }, [messages, user?.uid]);
 
     if (!activeChannel) {
         return (
@@ -71,6 +157,9 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
             </div>
         )
     }
+
+    const isAdmin = member?.role === 'owner' || member?.role === 'admin';
+    const canWrite = isAdmin || activeChannel.userAccess === 'readwrite';
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -95,8 +184,22 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
             ) : messages && messages.length > 0 ? messages.map((msg, index) => {
               const prevMessage = index > 0 ? messages[index - 1] : null;
               const showAuthor = !prevMessage || prevMessage.authorId !== msg.authorId;
+              
+              const isAuthor = msg.authorId === user?.uid;
+              const canEdit = isAuthor;
+              const canDelete = isAuthor || isAdmin;
+              const canPin = isAdmin;
+
               return (
-                 <div key={msg.id} className={`flex items-start gap-3 ${showAuthor ? 'mt-4' : 'mt-0.5'}`}>
+                 <div key={msg.id} className={cn("group relative flex items-start gap-3 py-1", showAuthor && 'mt-3')}>
+                    {/* Message Toolbar */}
+                     {(canEdit || canDelete || canPin) && (
+                        <div className="absolute top-0 right-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-card border rounded-md shadow-sm z-10">
+                            {canEdit && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEditing(msg)}><Pencil className="h-4 w-4"/></Button>}
+                            {canDelete && <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => startDeleting(msg)}><Trash2 className="h-4 w-4"/></Button>}
+                            {canPin && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleTogglePin(msg)}><Pin className={cn("h-4 w-4", msg.pinned && 'fill-current')}/></Button>}
+                        </div>
+                    )}
                     <div className="w-10">
                         {showAuthor && (
                             <Avatar className="h-10 w-10">
@@ -105,7 +208,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                             </Avatar>
                         )}
                     </div>
-                    <div>
+                    <div className='flex-1'>
                         {showAuthor && (
                             <div className="flex items-baseline gap-2">
                                 <p className="font-semibold text-primary">{msg.authorDisplayName}</p>
@@ -114,7 +217,34 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                 </p>
                             </div>
                         )}
-                        <MessageRenderer content={msg.text} />
+
+                        {editingMessageId === msg.id ? (
+                            <Form {...editForm}>
+                                <form onSubmit={editForm.handleSubmit(onEditSubmit)}>
+                                    <FormField
+                                        control={editForm.control}
+                                        name="text"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Textarea {...field} className="min-h-0 h-auto" disabled={isSavingEdit}/>
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <div className="text-xs mt-2">
+                                        escape to <Button type="button" variant="link" className="p-0 h-auto" onClick={cancelEditing}>cancel</Button>
+                                         - enter to <Button type="submit" variant="link" className="p-0 h-auto" disabled={isSavingEdit}>save</Button>
+                                    </div>
+                                </form>
+                            </Form>
+                        ) : (
+                           <div className="flex items-center gap-2">
+                                {msg.pinned && <Pin className="h-3 w-3 text-primary" />}
+                                <MessageRenderer content={msg.text} />
+                                {msg.editedAt && <span className="text-xs text-muted-foreground select-none">(edited)</span>}
+                           </div>
+                        )}
                     </div>
                 </div>
               );
@@ -134,18 +264,19 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
       </div>
 
       <footer className="shrink-0 border-t border-border/50 p-4">
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="relative">
+        <Form {...messageForm}>
+            <form onSubmit={messageForm.handleSubmit(onMessageSubmit)} className="relative">
                  <FormField
-                    control={form.control}
+                    control={messageForm.control}
                     name="text"
                     render={({ field }) => (
                         <FormItem>
                             <FormControl>
                                  <Input
-                                    placeholder={`Message #${activeChannel.name}`}
+                                    placeholder={canWrite ? `Message #${activeChannel.name}` : "You don't have permission to post here."}
                                     className="h-11 bg-secondary/80 pr-24 text-base"
                                     autoComplete="off"
+                                    disabled={!canWrite}
                                     {...field}
                                 />
                             </FormControl>
@@ -153,19 +284,36 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                     )}
                 />
                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" type="button">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" type="button" disabled={!canWrite}>
                         <Paperclip className="h-5 w-5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" type="button">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" type="button" disabled={!canWrite}>
                         <Smile className="h-5 w-5" />
                     </Button>
-                     <Button variant="ghost" size="icon" className="h-8 w-8" type="submit" disabled={form.formState.isSubmitting}>
+                     <Button variant="ghost" size="icon" className="h-8 w-8" type="submit" disabled={messageForm.formState.isSubmitting || !canWrite}>
                         <Send className="h-5 w-5" />
                     </Button>
                 </div>
             </form>
         </Form>
       </footer>
+      
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      Are you sure you want to delete this message? This cannot be undone.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleConfirmDelete} className={cn('bg-destructive text-destructive-foreground hover:bg-destructive/90')}>
+                      Delete
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

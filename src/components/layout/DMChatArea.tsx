@@ -1,12 +1,13 @@
 'use client';
 
-import { Paperclip, Smile, AtSign, Phone, Send, Loader2 } from 'lucide-react';
+import { Paperclip, Smile, AtSign, Phone, Send, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useUser, useUserProfile, useFirestore, useMessages, sendMessage } from '@/firebase';
-import { getConversationId } from '@/lib/utils';
+import { useUser, useUserProfile, useFirestore, useMessages, sendMessage, editMessage, deleteMessage } from '@/firebase';
+import { getConversationId, cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,14 +15,29 @@ import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import type { FriendWithProfile } from '@/firebase/friends/types';
 import MessageRenderer from '../MessageRenderer';
 import { format } from 'date-fns';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Skeleton } from '../ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
 
 interface DMChatAreaProps {
     contact: FriendWithProfile;
 }
 
-const formSchema = z.object({
+const messageFormSchema = z.object({
+  text: z.string().min(1, "Message cannot be empty."),
+});
+
+const editFormSchema = z.object({
   text: z.string().min(1, "Message cannot be empty."),
 });
 
@@ -30,18 +46,26 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
     const { data: userProfile } = useUserProfile();
     const firestore = useFirestore();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const { toast } = useToast();
+
+    const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+    const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
 
     const conversationId = user ? getConversationId(user.uid, contact.id) : null;
     const { messages, loading: messagesLoading } = useMessages(conversationId);
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            text: "",
-        },
+    const messageForm = useForm<z.infer<typeof messageFormSchema>>({
+        resolver: zodResolver(messageFormSchema),
+        defaultValues: { text: "" },
+    });
+    
+    const editForm = useForm<z.infer<typeof editFormSchema>>({
+        resolver: zodResolver(editFormSchema),
     });
 
-    async function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onMessageSubmit(values: z.infer<typeof messageFormSchema>) {
         if (!firestore || !conversationId || !user || !userProfile) return;
         
         await sendMessage(firestore, conversationId, {
@@ -51,17 +75,65 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
             authorPhotoURL: userProfile.photoURL || '',
         });
 
-        form.reset();
+        messageForm.reset();
+    }
+    
+    async function onEditSubmit(values: z.infer<typeof editFormSchema>) {
+        if (!firestore || !conversationId || !editingMessageId || !values.text) return;
+        
+        setIsSavingEdit(true);
+        try {
+            await editMessage(firestore, conversationId, editingMessageId, values.text);
+            setEditingMessageId(null);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not save message.' });
+        } finally {
+            setIsSavingEdit(false);
+        }
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!firestore || !conversationId || !deletingMessageId) return;
+        
+        try {
+            await deleteMessage(firestore, conversationId, deletingMessageId);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete message.' });
+        } finally {
+            setDeletingMessageId(null);
+            setIsDeleteAlertOpen(false);
+        }
+    }
+    
+    const startEditing = (message: any) => {
+        setEditingMessageId(message.id!);
+        editForm.setValue('text', message.text);
+    }
+    
+    const cancelEditing = () => {
+        setEditingMessageId(null);
+        editForm.reset();
+    }
+    
+    const startDeleting = (message: any) => {
+        setDeletingMessageId(message.id!);
+        setIsDeleteAlertOpen(true);
     }
     
     useEffect(() => {
-        if (scrollAreaRef.current) {
-            scrollAreaRef.current.scrollTo({
-                top: scrollAreaRef.current.scrollHeight,
-                behavior: 'smooth'
-            });
+        if (scrollAreaRef.current && messages?.length) {
+            const lastMessage = messages[messages.length - 1];
+            const viewport = scrollAreaRef.current.querySelector('div');
+            if (viewport) {
+                const isScrolledToBottom = viewport.scrollHeight - viewport.clientHeight <= viewport.scrollTop + 100;
+                if (lastMessage?.authorId === user?.uid || isScrolledToBottom) {
+                    setTimeout(() => {
+                        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+                    }, 100);
+                }
+            }
         }
-    }, [messages]);
+    }, [messages, user?.uid]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -88,9 +160,17 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                 messages.map((msg, index) => {
                     const prevMessage = index > 0 ? messages[index - 1] : null;
                     const showAuthor = !prevMessage || prevMessage.authorId !== msg.authorId;
+                    const isAuthor = msg.authorId === user?.uid;
                     
                     return (
-                        <div key={msg.id} className={`flex items-start gap-3 ${showAuthor ? 'mt-4' : 'mt-0.5'}`}>
+                        <div key={msg.id} className={cn("group relative flex items-start gap-3 py-1", showAuthor && 'mt-3')}>
+                            {/* Message Toolbar */}
+                            {isAuthor && (
+                                <div className="absolute top-0 right-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-card border rounded-md shadow-sm z-10">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEditing(msg)}><Pencil className="h-4 w-4"/></Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => startDeleting(msg)}><Trash2 className="h-4 w-4"/></Button>
+                                </div>
+                            )}
                             <div className="w-10">
                                 {showAuthor && (
                                     <Avatar className="h-10 w-10">
@@ -99,7 +179,7 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                                     </Avatar>
                                 )}
                             </div>
-                            <div>
+                            <div className="flex-1">
                                 {showAuthor && (
                                     <div className="flex items-baseline gap-2">
                                         <p className="font-semibold text-primary">{msg.authorDisplayName}</p>
@@ -108,7 +188,33 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                                         </p>
                                     </div>
                                 )}
-                                <MessageRenderer content={msg.text} />
+                                
+                                {editingMessageId === msg.id ? (
+                                    <Form {...editForm}>
+                                        <form onSubmit={editForm.handleSubmit(onEditSubmit)}>
+                                            <FormField
+                                                control={editForm.control}
+                                                name="text"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormControl>
+                                                            <Textarea {...field} className="min-h-0 h-auto" disabled={isSavingEdit}/>
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <div className="text-xs mt-2">
+                                                escape to <Button type="button" variant="link" className="p-0 h-auto" onClick={cancelEditing}>cancel</Button>
+                                                 - enter to <Button type="submit" variant="link" className="p-0 h-auto" disabled={isSavingEdit}>save</Button>
+                                            </div>
+                                        </form>
+                                    </Form>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <MessageRenderer content={msg.text} />
+                                        {msg.editedAt && <span className="text-xs text-muted-foreground select-none">(edited)</span>}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )
@@ -130,10 +236,10 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
       </div>
 
       <footer className="shrink-0 border-t border-border/50 p-2 md:p-4">
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="relative">
+        <Form {...messageForm}>
+            <form onSubmit={messageForm.handleSubmit(onMessageSubmit)} className="relative">
                 <FormField
-                    control={form.control}
+                    control={messageForm.control}
                     name="text"
                     render={({ field }) => (
                         <FormItem>
@@ -155,13 +261,30 @@ export default function DMChatArea({ contact }: DMChatAreaProps) {
                     <Button variant="ghost" size="icon" className="h-8 w-8" type="button">
                         <Smile className="h-5 w-5" />
                     </Button>
-                     <Button variant="ghost" size="icon" className="h-8 w-8" type="submit" disabled={form.formState.isSubmitting}>
+                     <Button variant="ghost" size="icon" className="h-8 w-8" type="submit" disabled={messageForm.formState.isSubmitting}>
                         <Send className="h-5 w-5" />
                     </Button>
                 </div>
             </form>
         </Form>
       </footer>
+      
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      Are you sure you want to delete this message? This cannot be undone.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleConfirmDelete} className={cn('bg-destructive text-destructive-foreground hover:bg-destructive/90')}>
+                      Delete
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

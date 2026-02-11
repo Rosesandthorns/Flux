@@ -35,7 +35,9 @@ export interface ServerMessage {
   authorPhotoURL: string;
   text: string;
   createdAt: Timestamp | null;
+  editedAt?: Timestamp | null;
+  pinned?: boolean;
   channelId: string;
 }
 
-export type ServerMessagePayload = Omit<ServerMessage, 'id' | 'createdAt' | 'channelId'>;
+export type ServerMessagePayload = Omit<ServerMessage, 'id' | 'createdAt' | 'channelId' | 'editedAt' | 'pinned'>;
