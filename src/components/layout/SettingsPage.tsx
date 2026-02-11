@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -57,7 +58,7 @@ const themes = [
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, "Must be at least 2 characters.").max(50, "Must be 50 characters or less."),
-  handle: z.string().min(2, "Must be at least 2 characters.").max(30, "Must be 30 characters or less.").regex(/^[a-zA-Z0-9_.]+$/, "Can only contain letters, numbers, underscores, and periods."),
+  handle: z.string().min(2, "Must be at least 2 characters.").max(30, "Must be 30 characters or less.").regex(/^[a-zA-Z0-9_.-]+$/, "Can only contain letters, numbers, underscores, periods, and hyphens."),
   photoURL: z.string().url({ message: "Please enter a valid URL." }).or(z.literal("")),
 });
 
@@ -121,7 +122,7 @@ export default function SettingsPage() {
     const nextUpdateDate = userProfile?.profileLastUpdatedAt ? add(userProfile.profileLastUpdatedAt.toDate(), { weeks: 4 }) : null;
 
     async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
-      if (!firestore || !auth?.currentUser || !userProfile) return;
+      if (!firestore || !auth?.currentUser) return;
 
       const { dirtyFields } = form.formState;
       const updates: { [key: string]: any } = {};

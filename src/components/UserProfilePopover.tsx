@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -106,8 +107,8 @@ const profileFormSchema = z.object({
     .min(2, 'Must be at least 2 characters.')
     .max(30, 'Must be 30 characters or less.')
     .regex(
-      /^[a-zA-Z0-9_.]+$/,
-      'Can only contain letters, numbers, underscores, and periods.'
+      /^[a-zA-Z0-9_.-]+$/,
+      'Can only contain letters, numbers, underscores, periods, and hyphens.'
     ),
   photoURL: z.string().url({ message: 'Please enter a valid URL.' }).or(z.literal('')),
 });
@@ -311,7 +312,7 @@ export default function UserProfilePopover({
   };
 
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
-    if (!firestore || !userProfile || !canModerateProfile) return;
+    if (!firestore || !canModerateProfile) return;
 
     const { dirtyFields } = form.formState;
     const updates: { [key: string]: any } = {};
@@ -350,7 +351,7 @@ export default function UserProfilePopover({
 
     setIsSaving(true);
     try {
-      await updateUserSettings(firestore, userProfile.id!, updates);
+      await updateUserSettings(firestore, userId, updates);
       toast({ title: 'Success!', description: 'User profile has been updated.' });
       setIsAdminEditDialogOpen(false);
     } catch (error) {
