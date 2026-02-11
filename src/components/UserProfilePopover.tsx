@@ -181,7 +181,7 @@ export default function UserProfilePopover({ children, userId, serverId, current
     }
 
     return (
-        <Popover onOpenChange={(open) => console.log(`[UserProfilePopover] Popover for user ${userId} open state changed to: ${open}`)}>
+        <Popover modal={true}>
             <PopoverTrigger asChild>{children}</PopoverTrigger>
             <PopoverContent className="w-80 p-0 z-[200]"
              onPointerDownOutside={(e) => {
