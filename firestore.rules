@@ -131,7 +131,8 @@ service cloud.firestore {
     match /servers/{serverId} {
       allow read: if isServerMember(serverId);
       allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow update: if (isServerAdmin(serverId) && request.resource.data.ownerId == resource.data.ownerId) || request.auth.uid == resource.data.ownerId;
+      allow update: if (isGlobalAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['featured'])) || 
+                     (isServerAdmin(serverId) && request.resource.data.ownerId == resource.data.ownerId && request.resource.data.diff(resource.data).affectedKeys().disjoint(['featured']));
       allow delete: if isServerOwner(serverId);
 
       match /members/{userId} {
@@ -160,5 +161,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

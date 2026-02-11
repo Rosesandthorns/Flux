@@ -23,8 +23,6 @@ import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 
 export async function createServer(firestore: Firestore, user: User, serverName: string) {
-    const defaultIcon = PlaceHolderImages.find(img => img.id === 'default-server-icon');
-
     const batch = writeBatch(firestore);
 
     // 1. Create the server document
@@ -34,11 +32,12 @@ export async function createServer(firestore: Firestore, user: User, serverName:
     batch.set(newServerRef, {
         name: serverName,
         ownerId: user.uid,
-        iconURL: defaultIcon?.imageUrl || '',
+        iconURL: '',
         createdAt: serverTimestamp(),
         inviteCode: inviteCode,
         trialModeEnabled: false,
         acceptingInvites: true,
+        featured: false,
     });
     
     // 2. Create the owner's member document

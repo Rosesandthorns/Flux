@@ -12,6 +12,7 @@ import {
   Plus,
   Copy,
   UserPlus,
+  Star,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -32,7 +33,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useUserProfile, useServer, useServerChannels, useUser, useServerMember, useFirestore, leaveServer, useChannelParticipants } from '@/firebase';
+import { useUserProfile, useServer, useServerChannels, useUser, useServerMember, useFirestore, leaveServer, useChannelParticipants, updateServer } from '@/firebase';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import CreateChannelDialog from '../servers/CreateChannelDialog';
@@ -135,6 +136,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   const { channels, loading: channelsLoading } = useServerChannels(serverId);
   const { user } = useUser();
   const firestore = useFirestore();
+  const { data: userProfile } = useUserProfile();
   const { data: member, loading: memberLoading } = useServerMember(serverId, user?.uid);
   
   const [showInviteDialog, setShowInviteDialog] = useState(false);
@@ -142,6 +144,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
   const [showOwnerLeaveAlert, setShowOwnerLeaveAlert] = useState(false);
   const [showServerSettings, setShowServerSettings] = useState(false);
 
+  const isGlobalAdmin = userProfile?.status === 'owner' || userProfile?.status === 'admin';
   const isOwner = member?.role === 'owner';
   const canManageServer = !memberLoading && (isOwner || member?.role === 'admin');
 
@@ -162,7 +165,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
     toggleMute,
     toggleDeafen,
   } = useVoice();
-  const { data: userProfile } = useUserProfile();
+  
 
   const effectiveMute = isMuted || isDeafened;
 
@@ -195,6 +198,23 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
     }
   }
 
+  const handleToggleFeature = async () => {
+    if (!firestore || !server || !server.id) return;
+    try {
+        await updateServer(firestore, server.id, { featured: !server.featured });
+        toast({
+            title: `Server ${server.featured ? 'Unfeatured' : 'Featured'}`,
+            description: `${server.name} will ${server.featured ? 'no longer' : 'now'} be shown in the Explore tab.`,
+        });
+    } catch (e) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not update server feature status.",
+        });
+    }
+  }
+
   return (
     <div className="relative z-10 flex h-full w-64 flex-col bg-secondary/30 backdrop-blur-xl shrink-0">
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-border/50 px-4 shadow-sm">
@@ -219,6 +239,12 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
                     <DropdownMenuItem onSelect={() => setShowServerSettings(true)}>
                         <Settings className="mr-2 h-4 w-4" />
                         <span>Server Settings</span>
+                    </DropdownMenuItem>
+                )}
+                {isGlobalAdmin && (
+                    <DropdownMenuItem onSelect={handleToggleFeature}>
+                        <Star className={cn("mr-2 h-4 w-4", server?.featured && "fill-current text-yellow-500")} />
+                        <span>{server?.featured ? 'Unfeature Server' : 'Feature Server'}</span>
                     </DropdownMenuItem>
                 )}
                 {canManageServer && <DropdownMenuSeparator />}
@@ -381,7 +407,7 @@ export default function ChannelSidebar({ serverId }: { serverId: string }) {
             <SheetContent
               showCloseButton={false}
               side="top"
-              className="h-screen w-screen p-0 border-none"
+              className="h-screen w-screen p-0 border-none z-[300]"
               onPointerDownOutside={(e) => {
                   const target = e.target as HTMLElement;
                   if (target.closest('[data-radix-dialog-content]')) {

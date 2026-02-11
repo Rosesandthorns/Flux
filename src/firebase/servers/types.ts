@@ -10,6 +10,7 @@ export interface Server {
     createdAt: Timestamp;
     trialModeEnabled?: boolean;
     acceptingInvites?: boolean;
+    featured?: boolean;
 }
 
 export type ServerRole = 'owner' | 'admin' | 'user' | 'trial';

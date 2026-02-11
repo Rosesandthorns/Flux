@@ -207,6 +207,11 @@
           "type": "boolean",
           "description": "If false, new users cannot join via invite code.",
           "default": true
+        },
+        "featured": {
+            "type": "boolean",
+            "description": "If true, this server is featured in the explore page.",
+            "default": false
         }
       },
       "required": ["name", "ownerId", "inviteCode", "createdAt"]
