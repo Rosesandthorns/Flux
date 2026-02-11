@@ -1,11 +1,12 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { User, Shield, Palette, KeyRound, Bell, LogOut, CheckCircle2 } from "lucide-react";
+import { User, Shield, Palette, KeyRound, Bell, LogOut, CheckCircle2, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,23 @@ import type { UserProfile } from "@/firebase/auth/users";
 import { signOut } from "firebase/auth";
 import { Skeleton } from "../ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { serverTimestamp } from "firebase/firestore";
+import { add, formatDistanceToNow } from "date-fns";
 
 type SettingsCategory = "My Account" | "Profiles" | "Privacy & Safety" | "Notifications" | "Keybinds";
 
@@ -35,13 +53,41 @@ const themes = [
     { name: "Jade", id: "jade", colors: ["bg-slate-100", "bg-emerald-500", "bg-slate-200"] },
 ];
 
+const profileFormSchema = z.object({
+  displayName: z.string().min(2, "Must be at least 2 characters.").max(50, "Must be 50 characters or less."),
+  handle: z.string().min(2, "Must be at least 2 characters.").max(30, "Must be 30 characters or less.").regex(/^[a-zA-Z0-9_.]+$/, "Can only contain letters, numbers, underscores, and periods."),
+  photoURL: z.string().url({ message: "Please enter a valid URL." }).or(z.literal("")),
+});
+
+
 export default function SettingsPage() {
     const [activeCategory, setActiveCategory] = useState<SettingsCategory>("My Account");
+    const [isSaving, setIsSaving] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const { theme: selectedTheme, setTheme: setSelectedTheme } = useTheme();
     const auth = useAuth();
     const firestore = useFirestore();
     const { data: userProfile, loading: userProfileLoading } = useUserProfile();
     const { toast } = useToast();
+
+    const form = useForm<z.infer<typeof profileFormSchema>>({
+      resolver: zodResolver(profileFormSchema),
+      defaultValues: {
+        displayName: "",
+        handle: "",
+        photoURL: "",
+      },
+    });
+
+    useEffect(() => {
+        if (userProfile && isEditDialogOpen) {
+            form.reset({
+                displayName: userProfile.displayName || "",
+                handle: userProfile.handle ? userProfile.handle.split('@')[0] : "",
+                photoURL: userProfile.photoURL || "",
+            });
+        }
+    }, [userProfile, isEditDialogOpen, form]);
 
     const handleLogout = async () => {
         if (auth) {
@@ -67,6 +113,58 @@ export default function SettingsPage() {
         setSelectedTheme(newTheme);
         handleSettingsUpdate({ theme: newTheme });
     };
+
+    const fourWeeksInMillis = 4 * 7 * 24 * 60 * 60 * 1000;
+    const canUpdateUsername = userProfile?.profileLastUpdatedAt ? (new Date().getTime() - userProfile.profileLastUpdatedAt.toDate().getTime()) > fourWeeksInMillis : true;
+    const nextUpdateDate = userProfile?.profileLastUpdatedAt ? add(userProfile.profileLastUpdatedAt.toDate(), { weeks: 4 }) : null;
+
+    async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
+      if (!firestore || !auth?.currentUser || !userProfile) return;
+
+      const updates: { [key: string]: any } = {};
+      let hasIdentityChanged = false;
+
+      if (values.displayName !== userProfile.displayName) {
+          updates.displayName = values.displayName;
+          hasIdentityChanged = true;
+      }
+      const newHandle = `${values.handle}@flux`;
+      if (newHandle !== userProfile.handle) {
+          updates.handle = newHandle;
+          hasIdentityChanged = true;
+      }
+      if (values.photoURL !== userProfile.photoURL) {
+          updates.photoURL = values.photoURL;
+      }
+
+      if (Object.keys(updates).length === 0) {
+          toast({ title: "No changes to save." });
+          setIsEditDialogOpen(false);
+          return;
+      }
+      
+      if (hasIdentityChanged && !canUpdateUsername) {
+        toast({ variant: 'destructive', title: 'Cooldown Active', description: 'You cannot change your username or handle yet.' });
+        return;
+      }
+
+      if (hasIdentityChanged) {
+        updates.profileLastUpdatedAt = serverTimestamp();
+      }
+
+      setIsSaving(true);
+      try {
+        await updateUserSettings(firestore, auth.currentUser.uid, updates);
+        toast({ title: "Success!", description: "Your profile has been updated." });
+        setIsEditDialogOpen(false);
+      } catch (error) {
+        if (process.env.NODE_ENV !== 'development') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not save profile.' });
+        }
+      } finally {
+        setIsSaving(false);
+      }
+    }
 
     const renderContent = () => {
         if (userProfileLoading) {
@@ -107,7 +205,79 @@ export default function SettingsPage() {
                                             <p className="text-muted-foreground">{userProfile.handle}</p>
                                         </div>
                                     </div>
-                                    <Button>Edit User Profile</Button>
+                                    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button>Edit User Profile</Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[425px]">
+                                            <DialogHeader>
+                                                <DialogTitle>Edit Profile</DialogTitle>
+                                                <DialogDescription>
+                                                    Make changes to your profile here. Click save when you're done.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <Form {...form}>
+                                                <form onSubmit={form.handleSubmit(onProfileSubmit)} className="space-y-4">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="displayName"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Display Name</FormLabel>
+                                                                <FormControl>
+                                                                    <Input placeholder="Your display name" {...field} disabled={!canUpdateUsername || isSaving} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="handle"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Handle</FormLabel>
+                                                                <FormControl>
+                                                                    <div className="relative">
+                                                                        <Input placeholder="your_handle" {...field} className="pr-[5.5rem]" disabled={!canUpdateUsername || isSaving}/>
+                                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">@flux</span>
+                                                                    </div>
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                     {!canUpdateUsername && nextUpdateDate && (
+                                                        <p className="text-sm text-muted-foreground">
+                                                            You can change your display name and handle again {formatDistanceToNow(nextUpdateDate, { addSuffix: true })}.
+                                                        </p>
+                                                    )}
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="photoURL"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Profile Picture URL</FormLabel>
+                                                                <FormControl>
+                                                                    <Input placeholder="https://example.com/image.png" {...field} disabled={isSaving} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                    <DialogFooter>
+                                                        <DialogClose asChild>
+                                                            <Button type="button" variant="secondary" disabled={isSaving}>Cancel</Button>
+                                                        </DialogClose>
+                                                        <Button type="submit" disabled={isSaving}>
+                                                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                            Save changes
+                                                        </Button>
+                                                    </DialogFooter>
+                                                </form>
+                                            </Form>
+                                        </DialogContent>
+                                    </Dialog>
                                 </div>
                             </CardContent>
                         </Card>

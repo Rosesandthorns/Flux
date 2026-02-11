@@ -27,6 +27,10 @@
           "type": "string",
           "description": "The timestamp when the user account was created."
         },
+        "profileLastUpdatedAt": {
+          "type": "string",
+          "description": "The timestamp when the user's profile (name/handle) was last updated."
+        },
         "status": {
           "type": "string",
           "description": "The user's status or role.",
@@ -75,7 +79,7 @@
           "required": ["friendRequests", "mentions", "dms"]
         }
       },
-      "required": ["handle", "displayName", "email", "createdAt", "status", "theme", "privacy", "notifications"]
+      "required": ["handle", "displayName", "email", "createdAt", "profileLastUpdatedAt", "status", "theme", "privacy", "notifications"]
     }
   },
   "auth": {

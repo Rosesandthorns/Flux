@@ -11,6 +11,7 @@ export type UserProfile = {
     email: string;
     photoURL?: string;
     createdAt: any;
+    profileLastUpdatedAt: any;
     status: string;
     theme: Theme;
     privacy: {
@@ -31,6 +32,7 @@ export const createUserProfile = (firestore: Firestore, userId: string, email: s
         displayName: username,
         handle: `${username.toLowerCase()}@flux`,
         createdAt: serverTimestamp(),
+        profileLastUpdatedAt: serverTimestamp(),
         status: 'user',
         photoURL: `https://picsum.photos/seed/${userId}/400/400`,
         theme: 'default',
