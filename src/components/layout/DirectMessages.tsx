@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Check, X } from 'lucide-react';
+import { Search, Check, X, Clock, Ban, UserPlus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,15 +38,22 @@ export default function DirectMessages() {
         </div>
 
         <Tabs defaultValue="all" className="flex-1 flex flex-col overflow-hidden px-4">
-            <TabsList className="grid w-full grid-cols-5 bg-transparent p-0 h-auto gap-1">
+            <TabsList className="flex w-full items-center justify-start gap-1 bg-transparent p-0 h-auto">
                 <TabsTrigger value="online" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground">Online</TabsTrigger>
                 <TabsTrigger value="all" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground">All</TabsTrigger>
                 <TabsTrigger value="pending" className="relative data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground">
-                    Pending
+                    <Clock className="h-5 w-5 md:hidden" />
+                    <span className="hidden md:inline">Pending</span>
                     {pendingRequests.length > 0 && <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 justify-center p-0 text-xs">{pendingRequests.length}</Badge>}
                 </TabsTrigger>
-                <TabsTrigger value="blocked" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground">Blocked</TabsTrigger>
-                <TabsTrigger value="add" className="text-green-500 data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-md font-semibold">Add Friend</TabsTrigger>
+                <TabsTrigger value="blocked" className="data-[state=active]:bg-accent data-[state=active]:shadow-none rounded-md text-muted-foreground hover:text-accent-foreground">
+                    <Ban className="h-5 w-5 md:hidden" />
+                    <span className="hidden md:inline">Blocked</span>
+                </TabsTrigger>
+                <TabsTrigger value="add" className="text-green-500 data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-md font-semibold">
+                    <UserPlus className="h-5 w-5 md:hidden" />
+                    <span className="hidden md:inline">Add Friend</span>
+                </TabsTrigger>
             </TabsList>
             <Separator className="my-3 bg-border/50" />
 
