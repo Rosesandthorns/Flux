@@ -8,9 +8,10 @@ import React from 'react';
 
 interface MessageRendererProps {
     content: string;
+    className?: string;
 }
 
-export default function MessageRenderer({ content }: MessageRendererProps) {
+export default function MessageRenderer({ content, className }: MessageRendererProps) {
     // Pre-process the message to convert our custom `-# ` syntax to standard markdown `## ` for h2
     const processedContent = content.replace(/^-# /gm, '## ');
 
@@ -48,7 +49,7 @@ export default function MessageRenderer({ content }: MessageRendererProps) {
     return (
         <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            className="text-foreground/90 break-words"
+            className={cn("text-foreground/90 break-words", className)}
             components={markdownComponents}
         >
             {processedContent}

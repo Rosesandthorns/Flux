@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -54,10 +53,10 @@ export default function SpecialMessageRenderer({ content }: SpecialMessageRender
     }, [hasConfetti, hasFish]);
     
     return (
-        <div className={colorClass}>
+        <div>
             {hasConfetti && <ConfettiEffect key={`confetti-${renderKey}`} />}
             {hasFish && <FishEffect key={`fish-${renderKey}`} />}
-            <MessageRenderer content={processedContent} />
+            <MessageRenderer content={processedContent} className={colorClass} />
         </div>
     );
 }
