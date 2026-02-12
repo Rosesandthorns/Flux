@@ -53,7 +53,7 @@ export default function SpecialMessageRenderer({ content }: SpecialMessageRender
     }, [hasConfetti, hasFish]);
     
     return (
-        <div className="relative overflow-hidden">
+        <div className="relative w-full overflow-hidden -my-4 py-4">
             {hasConfetti && <ConfettiEffect key={`confetti-${renderKey}`} />}
             {hasFish && <FishEffect key={`fish-${renderKey}`} />}
             <MessageRenderer content={processedContent} className={colorClass} />

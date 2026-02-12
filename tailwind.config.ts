@@ -96,7 +96,7 @@ export default {
         },
         'confetti-fall': {
           '0%': { transform: 'translateY(0) rotateZ(0deg)', opacity: '1' },
-          '100%': { transform: 'translateY(200px) rotateZ(720deg)', opacity: '0' },
+          '100%': { transform: 'translateY(100px) rotateZ(720deg)', opacity: '0' },
         },
         'swim-across': {
           '0%': { left: '-10%' },
