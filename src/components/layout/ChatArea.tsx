@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Hash, Pin, Users, Paperclip, Smile, Send, Pencil, Trash2, Check, X, ArrowLeft } from 'lucide-react';
@@ -12,7 +13,7 @@ import { z } from 'zod';
 import { useUser, useUserProfile, useFirestore, sendServerMessage, editServerMessage, deleteServerMessage, togglePinServerMessage, useServerMembers, kickServerMember, updateUserRole, useAuthorProfiles } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
-import MessageRenderer from '../MessageRenderer';
+import SpecialMessageRenderer from '../SpecialMessageRenderer';
 import { format } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -331,7 +332,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                                                             {msg.createdAt ? format(msg.createdAt.toDate(), 'PP p') : null}
                                                         </p>
                                                     </div>
-                                                    <MessageRenderer content={msg.text} />
+                                                    <SpecialMessageRenderer content={msg.text} />
                                                 </div>
                                             </div>
                                         </div>
@@ -530,7 +531,7 @@ export default function ChatArea({ serverId, activeChannel, messages, messagesLo
                         ) : (
                            <div className="flex items-center gap-2">
                                 {msg.pinned && <Pin className="h-3 w-3 text-primary" />}
-                                <MessageRenderer content={msg.text} />
+                                <SpecialMessageRenderer content={msg.text} />
                                 {msg.editedAt && <span className="text-xs text-muted-foreground select-none">(edited)</span>}
                            </div>
                         )}

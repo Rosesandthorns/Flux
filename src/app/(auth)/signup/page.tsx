@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -22,8 +23,13 @@ import { createUserProfile } from "@/firebase/auth/users";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
+const RESERVED_HANDLES = ['confetti', 'red', 'blue', 'green', 'fish', 'flux-official'];
+
 const formSchema = z.object({
-  username: z.string().min(2, { message: "Username must be at least 2 characters." }).max(50),
+  username: z.string().min(2, { message: "Username must be at least 2 characters." }).max(50)
+    .refine(val => !RESERVED_HANDLES.includes(val.toLowerCase()), {
+      message: "This username is reserved."
+    }),
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });

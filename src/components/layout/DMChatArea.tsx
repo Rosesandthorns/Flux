@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Paperclip, Smile, AtSign, Phone, Send, Loader2, Pencil, Trash2, X, ArrowLeft } from 'lucide-react';
@@ -12,7 +13,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import type { FriendWithProfile } from '@/firebase/friends/types';
-import MessageRenderer from '../MessageRenderer';
+import SpecialMessageRenderer from '../SpecialMessageRenderer';
 import { format } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -202,7 +203,7 @@ export default function DMChatArea({ contact, onBack }: DMChatAreaProps) {
     const contactProfile = authorProfiles[contact.id];
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
+    <div className="flex flex-1 flex-col">
       <header className="flex h-12 shrink-0 items-center border-b border-border/50 px-2 md:px-4">
         {onBack && (
             <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={onBack}>
@@ -298,7 +299,7 @@ export default function DMChatArea({ contact, onBack }: DMChatAreaProps) {
                                     </Form>
                                 ) : (
                                     <div className="flex items-center gap-2">
-                                        <MessageRenderer content={msg.text} />
+                                        <SpecialMessageRenderer content={msg.text} />
                                         {msg.editedAt && <span className="text-xs text-muted-foreground select-none">(edited)</span>}
                                     </div>
                                 )}
