@@ -19,7 +19,7 @@ const COLOR_MAP: { [key: string]: string } = {
 const RESERVED_KEYWORDS = {
     CONF_KEY: 'confetti@flux',
     FISH_KEY: 'fish@flux',
-    COLOR_REGEX: /(red|green|blue)@flux/g,
+    COLOR_REGEX: /(red|green|blue)@flux/,
 };
 
 export default function SpecialMessageRenderer({ content }: SpecialMessageRendererProps) {
@@ -41,12 +41,12 @@ export default function SpecialMessageRenderer({ content }: SpecialMessageRender
         
         const colorMatch = tempContent.match(RESERVED_KEYWORDS.COLOR_REGEX);
         if (colorMatch) {
-            const color = colorMatch[0].split('@')[0];
-            colorClass = COLOR_MAP[color] || '';
+            const color = colorMatch[1];
+            colorClass = COLOR_MAP[color as keyof typeof COLOR_MAP] || '';
             tempContent = tempContent.replace(RESERVED_KEYWORDS.COLOR_REGEX, '');
         }
 
-        return { processedContent: tempContent, colorClass, hasConfetti, hasFish };
+        return { processedContent: tempContent.trim(), colorClass, hasConfetti, hasFish };
     }, [content]);
 
     useEffect(() => {

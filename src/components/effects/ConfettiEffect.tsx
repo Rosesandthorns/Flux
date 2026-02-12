@@ -21,7 +21,7 @@ export default function ConfettiEffect() {
   }, []);
 
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden z-[500]">
+    <div className="fixed inset-0 pointer-events-none z-[500]">
       {pieces.map(p => (
         <div
           key={p.id}

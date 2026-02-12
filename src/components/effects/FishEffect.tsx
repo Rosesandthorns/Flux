@@ -7,16 +7,6 @@ const FISH_COUNT = 10;
 const FISH_EMOJIS = ['🐠', '🐟', '🐡'];
 
 export default function FishEffect() {
-  const [shouldRender, setShouldRender] = useState(false);
-
-  useEffect(() => {
-    if (Math.random() > 0.3) {
-      setShouldRender(false);
-    } else {
-      setShouldRender(true);
-    }
-  }, []);
-
   const fishes = useMemo(() => {
     return Array.from({ length: FISH_COUNT }).map((_, i) => ({
       id: i,
@@ -30,10 +20,8 @@ export default function FishEffect() {
     }));
   }, []);
 
-  if (!shouldRender) return null;
-
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden z-[500]">
+    <div className="fixed inset-0 pointer-events-none z-[500]">
       {fishes.map(f => (
         <div
           key={f.id}
