@@ -21,7 +21,7 @@ export default function FishEffect() {
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[500]">
+    <div className="absolute inset-0 pointer-events-none">
       {fishes.map(f => (
         <div
           key={f.id}
