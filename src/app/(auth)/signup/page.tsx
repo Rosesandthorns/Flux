@@ -23,7 +23,7 @@ import { createUserProfile } from "@/firebase/auth/users";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-const RESERVED_HANDLES = ['confetti', 'red', 'blue', 'green', 'fish', 'flux-official'];
+const RESERVED_HANDLES = ['confetti', 'red', 'blue', 'green', 'fish', 'flux-official', 'yellow', 'orange', 'pink', 'zoo', 'space', 'spooky'];
 
 const formSchema = z.object({
   username: z.string().min(2, { message: "Username must be at least 2 characters." }).max(50)
