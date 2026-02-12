@@ -110,7 +110,7 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'bounce-in': 'bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         'confetti-fall': 'confetti-fall 3s linear forwards',
-        'swim-across': 'swim-across linear forwards',
+        'swim-across': 'swim-across linear both',
       },
     },
   },
